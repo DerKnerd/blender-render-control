@@ -1,13 +1,17 @@
-package server
+package processing
 
 import (
-	"../types"
 	"bufio"
-	"log"
+	"os"
 	"os/exec"
 	"path"
 	"sort"
+
+	"../types"
+	"../utils"
 )
+
+var workingDir, _ = os.Getwd()
 
 type ProcessQueue struct {
 	Files          []string
@@ -25,14 +29,17 @@ func (processQueue *ProcessQueue) Process() {
 
 func (processQueue *ProcessQueue) StopProcessing(force bool) {
 	processQueue.process = false
+	websocketClient := types.GetWebsocketClient()
+
 	if force && processQueue.blenderCommand != nil {
 		err := processQueue.blenderCommand.Process.Kill()
-		sendError("", err)
+		websocketClient.SendError("", err)
 	}
 }
 
 func (processQueue *ProcessQueue) ProcessNext() {
 	file, leftFiles := processQueue.Files[0], processQueue.Files[1:]
+	websocketClient := types.GetWebsocketClient()
 
 	processQueue.blenderCommand = exec.Command(
 		"/usr/bin/blender",
@@ -46,43 +53,27 @@ func (processQueue *ProcessQueue) ProcessNext() {
 	)
 
 	stdoutReader, err := processQueue.blenderCommand.StdoutPipe()
-	sendError("", err)
+	websocketClient.SendError("", err)
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
-		go func() {
-			for scanner.Scan() {
-				log.Print(scanner.Text())
-				sendResponse(types.Response{
-					File:    "",
-					Message: scanner.Text(),
-				})
-			}
-		}()
+		go utils.ReportScanner(scanner)
 	} else {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	}
 
 	stderrReader, err := processQueue.blenderCommand.StderrPipe()
-	sendError("", err)
+	websocketClient.SendError("", err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
-		go func() {
-			for scanner.Scan() {
-				log.Fatal(scanner.Text())
-				sendResponse(types.Response{
-					File:    "",
-					Message: scanner.Text(),
-				})
-			}
-		}()
+		go utils.ReportScanner(scanner)
 	} else {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	}
 
 	err = processQueue.blenderCommand.Start()
 	if err != nil {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	} else {
 		defer processQueue.blenderCommand.Wait()
 		processQueue.Files = leftFiles

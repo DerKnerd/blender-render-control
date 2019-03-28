@@ -1,24 +1,28 @@
+import bpy
 import os
 import sys
-import bpy
 
 context = bpy.context
 user_preferences = context.user_preferences
 scene = context.scene
 objects = scene.objects
 
-for obj in objects:
-    obj.select = obj.type == "CAMERA"
-
-file_prefix = os.path.splitext(bpy.path.basename(context.blend_data.filepath))[0] + " - "
-
 argv = sys.argv[sys.argv.index("--") + 1:]
+fullpath = sys.argv[1]
+filename = os.path.splitext(os.path.basename(fullpath))[0] + " - "
+foldername = os.path.dirname(fullpath)
+
 scene.render.resolution_x = int(argv[0])
 scene.render.resolution_y = int(argv[1])
 scene.render.resolution_percentage = 100
 scene.render.engine = "CYCLES"
-scene.cycles.device = "GPU"
 scene.render.use_border = False
+
+scene.cycles.device = "CPU"
+scene.cycles.tile_order = "CENTER"
+scene.cycles.tile_x = 512
+scene.cycles.tile_y = 512
+
 preferences = context.user_preferences
 cycles_preferences = preferences.addons['cycles'].preferences
 
@@ -35,11 +39,12 @@ for device in cycles_preferences.devices:
     device.use = True
 
 count = 0
-output_dir = bpy.path.abspath('//')
+output_dir = foldername + '/'
 
 print('Output directory: ' + output_dir)
-for obj in context.selected_objects:
-    if obj.type == 'CAMERA':
+for obj in objects:
+    if obj.type.upper() == 'CAMERA':
+        print(obj.name)
         count += 1
         scene.camera = obj
         bpy.ops.render.render()
@@ -47,7 +52,7 @@ for obj in context.selected_objects:
         print('Rendering with camera: ' + obj.name)
         render = bpy.data.images['Render Result'].copy()
 
-        file_name = file_prefix + obj.name + scene.render.file_extension
+        file_name = filename + obj.name + scene.render.file_extension
         print('File created: "' + file_name + '"')
         render.save_render(output_dir + file_name)
 

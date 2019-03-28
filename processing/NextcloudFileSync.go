@@ -1,10 +1,12 @@
-package server
+package processing
 
 import (
-	"../types"
 	"bufio"
 	"log"
 	"os/exec"
+
+	"../config"
+	"../types"
 )
 
 var (
@@ -18,59 +20,66 @@ func StopSyncNextcloudFiles() {
 }
 
 func SyncNextcloudFiles() {
+	websocketClient := types.GetWebsocketClient()
+
 	cmd := exec.Command(
-		GlobalConfig.Nextcloud.Executable,
-		GlobalConfig.Nextcloud.SyncDirectory,
-		GlobalConfig.Nextcloud.Server,
+		config.GlobalConfig.Nextcloud.Executable,
+		config.GlobalConfig.Nextcloud.SyncDirectory,
+		config.GlobalConfig.Nextcloud.Server,
 	)
 
 	processes = append(processes, cmd)
 
 	stdoutReader, err := cmd.StdoutPipe()
-	sendError("", err)
+	websocketClient.SendError("", err)
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
 		go func() {
 			for scanner.Scan() {
 				log.Print(scanner.Text())
-				sendResponse(types.Response{
+				websocketClient.SendResponse(types.Response{
 					File:    "",
 					Message: scanner.Text(),
 				})
 			}
 		}()
 	} else {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	}
 
 	stderrReader, err := cmd.StderrPipe()
-	sendError("", err)
+	websocketClient.SendError("", err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
 		go func() {
 			for scanner.Scan() {
 				log.Fatal(scanner.Text())
-				sendResponse(types.Response{
+				websocketClient.SendResponse(types.Response{
 					File:    "",
 					Message: scanner.Text(),
 				})
 			}
 		}()
 	} else {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	}
 
-	sendResponse(types.Response{
+	websocketClient.SendResponse(types.Response{
 		Message: "Start Nextcloud sync",
 	})
+
 	err = cmd.Start()
 	if err != nil {
-		sendError("", err)
+		websocketClient.SendError("", err)
 	} else {
-		cmd.Wait()
-		sendResponse(types.Response{
-			Message: "Finished Nextcloud sync",
-		})
+		err = cmd.Wait()
+		if err != nil {
+			websocketClient.SendResponse(types.Response{
+				Message: "Finished Nextcloud sync",
+			})
+		} else {
+			websocketClient.SendError("", err)
+		}
 	}
 }

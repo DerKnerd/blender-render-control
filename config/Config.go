@@ -1,14 +1,15 @@
-package server
+package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Nextcloud struct {
 	Executable    string `yaml:"executable"`
 	SyncDirectory string `yaml:"syncdir"`
-	Server        string `yaml:"server"`
+	Server        string `yaml:"processing"`
 }
 
 type Blender struct {
@@ -22,7 +23,7 @@ type Config struct {
 }
 
 func (config *Config) Parse(configFile string) {
-	data, err := ioutil.ReadFile(configFile);
+	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		panic(err)
 	}
