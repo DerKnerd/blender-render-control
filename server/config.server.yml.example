@@ -1,0 +1,6 @@
+nextcloud:
+  executable: /usr/bin/nextcloudcmd
+  syncdir: # Please provide a sync dir
+  server: # Please provide the server in the format protocol://username:password@server
+blender:
+  executable: /usr/bin/blender

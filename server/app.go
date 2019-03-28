@@ -1,12 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
+	"../types"
 	"./config"
 	"./processing"
-	"./types"
 )
 
 var (
@@ -28,7 +29,9 @@ func main() {
 		defer processing.Listen(connection)
 	})
 
-	err := http.ListenAndServe(":1337", nil)
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *config.GetFlags().Address, *config.GetFlags().Port), nil)
+	log.Printf("Listening on address and port %s:%d", *config.GetFlags().Address, *config.GetFlags().Port)
+
 	if err != nil {
 		log.Fatal(err.Error())
 	}

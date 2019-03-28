@@ -1,0 +1,9 @@
+[Unit]
+Description=Blender Render Control server
+
+[Service]
+User=blender
+ExecStart=/usr/local/bin/blender-render-control -config.file /usr/local/share/blender-render-control/config.yml
+
+[Install]
+WantedBy=multi-user.target

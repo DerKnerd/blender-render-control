@@ -7,7 +7,7 @@ import (
 	"path"
 	"sort"
 
-	"../types"
+	"../../types"
 	"../utils"
 )
 
