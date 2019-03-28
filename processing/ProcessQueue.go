@@ -12,11 +12,20 @@ import (
 )
 
 var workingDir, _ = os.Getwd()
+var processQueue *ProcessQueue
 
 type ProcessQueue struct {
 	Files          []string
 	process        bool
 	blenderCommand *exec.Cmd
+}
+
+func GetProcessQueue() *ProcessQueue {
+	if processQueue == nil {
+		processQueue = &ProcessQueue{}
+	}
+
+	return processQueue
 }
 
 func (processQueue *ProcessQueue) Process() {

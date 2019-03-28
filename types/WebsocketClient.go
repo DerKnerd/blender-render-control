@@ -20,7 +20,7 @@ type WebsocketClient struct {
 }
 
 func GetWebsocketClient() *WebsocketClient {
-	if currentClient != nil {
+	if currentClient == nil {
 		currentClient = &WebsocketClient{connections: make([]*WebsocketConnection, 0)}
 	}
 
@@ -44,8 +44,6 @@ func (client *WebsocketClient) ConvertHttpToWs(r *http.Request, w http.ResponseW
 		Connection: conn,
 	}
 
-	defer conn.Close()
-
 	return websocketConnection, nil
 }
 
@@ -58,5 +56,15 @@ func (client *WebsocketClient) SendResponse(response Response) {
 func (client *WebsocketClient) SendError(file string, err error) {
 	for _, connection := range client.connections {
 		connection.SendError(file, err)
+	}
+}
+
+func (client *WebsocketClient) Send(v interface{}) {
+	for _, connection := range client.connections {
+		err := connection.Connection.WriteJSON(v)
+
+		if err != nil {
+			client.SendError("", err)
+		}
 	}
 }
