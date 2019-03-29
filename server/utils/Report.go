@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"log"
 
-	"../../types"
+	"../types"
 )
 
 func ReportScanner(scanner *bufio.Scanner) {

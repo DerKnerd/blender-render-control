@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"../types"
 	"./config"
 	"./processing"
+	"./types"
 )
 
 var (

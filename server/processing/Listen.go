@@ -1,7 +1,7 @@
 package processing
 
 import (
-	"../../types"
+	"../types"
 )
 
 func Listen(connection *types.WebsocketConnection) {

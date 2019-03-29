@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"../../types"
 	"../config"
+	"../types"
 )
 
 func ListFiles() {

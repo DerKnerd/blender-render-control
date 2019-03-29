@@ -5,8 +5,8 @@ import (
 	"log"
 	"os/exec"
 
-	"../../types"
 	"../config"
+	"../types"
 )
 
 var (
