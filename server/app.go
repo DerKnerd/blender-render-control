@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"../types"
 	"./config"
@@ -16,6 +17,16 @@ var (
 
 func main() {
 	config.GlobalConfig.Parse(*config.GetFlags().ConfigFile)
+	if *config.GetFlags().LogFile != "" {
+		logFile, err := os.OpenFile(*config.GetFlags().LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer logFile.Close()
+
+		log.SetOutput(logFile)
+	}
 
 	http.HandleFunc("/blender-control", func(w http.ResponseWriter, r *http.Request) {
 		connection, err := websocketClient.ConvertHttpToWs(r, w)
