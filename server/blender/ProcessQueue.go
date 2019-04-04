@@ -1,4 +1,4 @@
-package processing
+package blender
 
 import (
 	"bufio"
@@ -6,13 +6,12 @@ import (
 	"os/exec"
 	"path"
 	"sort"
-
-	"../types"
-	"../utils"
 )
 
-var workingDir, _ = os.Getwd()
-var processQueue *ProcessQueue
+var (
+	workingDir, _ = os.Getwd()
+	processQueue  *ProcessQueue
+)
 
 type ProcessQueue struct {
 	Files          []string
@@ -38,7 +37,7 @@ func (processQueue *ProcessQueue) Process() {
 
 func (processQueue *ProcessQueue) StopProcessing(force bool) {
 	processQueue.process = false
-	websocketClient := types.GetWebsocketClient()
+	websocketClient := GetClient()
 
 	if force && processQueue.blenderCommand != nil {
 		err := processQueue.blenderCommand.Process.Kill()
@@ -48,7 +47,7 @@ func (processQueue *ProcessQueue) StopProcessing(force bool) {
 
 func (processQueue *ProcessQueue) ProcessNext() {
 	file, leftFiles := processQueue.Files[0], processQueue.Files[1:]
-	websocketClient := types.GetWebsocketClient()
+	websocketClient := GetClient()
 
 	processQueue.blenderCommand = exec.Command(
 		"/usr/bin/blender",
@@ -66,7 +65,7 @@ func (processQueue *ProcessQueue) ProcessNext() {
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
-		go utils.ReportScanner(scanner)
+		go ReportScanner(scanner)
 	} else {
 		websocketClient.SendError("", err)
 	}
@@ -75,7 +74,7 @@ func (processQueue *ProcessQueue) ProcessNext() {
 	websocketClient.SendError("", err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
-		go utils.ReportScanner(scanner)
+		go ReportScanner(scanner)
 	} else {
 		websocketClient.SendError("", err)
 	}

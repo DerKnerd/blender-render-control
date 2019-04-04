@@ -6,13 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"./blender"
 	"./config"
-	"./processing"
-	"./types"
-)
-
-var (
-	websocketClient = types.GetWebsocketClient()
+	"./nextcloud"
 )
 
 func main() {
@@ -26,22 +22,16 @@ func main() {
 		defer logFile.Close()
 
 		log.SetOutput(logFile)
+	} else {
+		log.SetOutput(os.Stdout)
 	}
 
-	http.HandleFunc("/blender-control", func(w http.ResponseWriter, r *http.Request) {
-		connection, err := websocketClient.ConvertHttpToWs(r, w)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
+	http.HandleFunc("/list-files", blender.ListFiles)
+	http.HandleFunc("/blender-control", blender.Handle)
+	http.HandleFunc("/nextcloud-control", nextcloud.Handle)
 
-		websocketClient.AddConnection(connection)
-		defer processing.Listen(connection)
-	})
-
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *config.GetFlags().Address, *config.GetFlags().Port), nil)
 	log.Printf("Listening on address and port %s:%d", *config.GetFlags().Address, *config.GetFlags().Port)
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *config.GetFlags().Address, *config.GetFlags().Port), nil)
 
 	if err != nil {
 		log.Fatal(err.Error())

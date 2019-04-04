@@ -1,4 +1,4 @@
-package types
+package blender
 
 import (
 	"log"
@@ -6,18 +6,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type WebsocketConnection struct {
+type Connection struct {
 	Connection *websocket.Conn
 }
 
-func (connection *WebsocketConnection) SendResponse(response Response) {
+func (connection *Connection) SendResponse(response Response) {
 	err := connection.Connection.WriteJSON(response)
 	if err != nil {
 		log.Printf(err.Error())
 	}
 }
 
-func (connection *WebsocketConnection) SendError(file string, err error) {
+func (connection *Connection) SendError(file string, err error) {
 	if err != nil {
 		connection.SendResponse(Response{
 			File:    file,
@@ -26,6 +26,6 @@ func (connection *WebsocketConnection) SendError(file string, err error) {
 	}
 }
 
-func (connection *WebsocketConnection) ReadDataToObject(v interface{}) error {
+func (connection *Connection) ReadDataToObject(v interface{}) error {
 	return connection.Connection.ReadJSON(v)
 }

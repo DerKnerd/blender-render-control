@@ -1,18 +1,16 @@
-package utils
+package blender
 
 import (
 	"bufio"
 	"log"
-
-	"../types"
 )
 
 func ReportScanner(scanner *bufio.Scanner) {
-	websocketClient := types.GetWebsocketClient()
+	websocketClient := GetClient()
 
 	for scanner.Scan() {
 		log.Print(scanner.Text())
-		websocketClient.SendResponse(types.Response{
+		websocketClient.SendResponse(Response{
 			File:    "",
 			Message: scanner.Text(),
 		})

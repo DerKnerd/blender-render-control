@@ -1,4 +1,4 @@
-package types
+package blender
 
 import (
 	"log"
@@ -12,27 +12,27 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	currentClient *WebsocketClient
+	currentBlenderClient *Client
 )
 
-type WebsocketClient struct {
-	connections []*WebsocketConnection
+type Client struct {
+	connections []*Connection
 }
 
-func GetWebsocketClient() *WebsocketClient {
-	if currentClient == nil {
-		currentClient = &WebsocketClient{connections: make([]*WebsocketConnection, 0)}
+func GetClient() *Client {
+	if currentBlenderClient == nil {
+		currentBlenderClient = &Client{connections: make([]*Connection, 0)}
 	}
 
-	return currentClient
+	return currentBlenderClient
 }
 
-func (client *WebsocketClient) AddConnection(connection *WebsocketConnection) {
+func (client *Client) AddConnection(connection *Connection) {
 	client.connections = append(client.connections, connection)
 
 }
 
-func (client *WebsocketClient) ConvertHttpToWs(r *http.Request, w http.ResponseWriter) (*WebsocketConnection, error) {
+func (client *Client) ConvertHttpToWs(w http.ResponseWriter, r *http.Request) (*Connection, error) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 
 	if err != nil {
@@ -40,26 +40,26 @@ func (client *WebsocketClient) ConvertHttpToWs(r *http.Request, w http.ResponseW
 		return nil, err
 	}
 
-	websocketConnection := &WebsocketConnection{
+	websocketConnection := &Connection{
 		Connection: conn,
 	}
 
 	return websocketConnection, nil
 }
 
-func (client *WebsocketClient) SendResponse(response Response) {
+func (client *Client) SendResponse(response Response) {
 	for _, connection := range client.connections {
 		connection.SendResponse(response)
 	}
 }
 
-func (client *WebsocketClient) SendError(file string, err error) {
+func (client *Client) SendError(file string, err error) {
 	for _, connection := range client.connections {
 		connection.SendError(file, err)
 	}
 }
 
-func (client *WebsocketClient) Send(v interface{}) {
+func (client *Client) Send(v interface{}) {
 	for _, connection := range client.connections {
 		err := connection.Connection.WriteJSON(v)
 

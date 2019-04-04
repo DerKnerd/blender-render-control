@@ -1,4 +1,4 @@
-package types
+package blender
 
 type Response struct {
 	Message string `json:"message,omitempty"`
