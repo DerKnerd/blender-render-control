@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <kcfgfile name="guirc"/>
+  <group name="Preferences">
+    <entry name="serverHost" type="String">
+	    <label>The host of the render server</label>
+	    <default>localhost</default>
+    </entry>
+    <entry name="serverPort" type="UInt">
+	    <label>The port of the render server</label>
+	    <default>1337</default>
+    </entry>
+  </group>
+</kcfg>

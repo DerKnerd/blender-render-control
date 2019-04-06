@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui name="gui"
+     version="1"
+     xmlns="http://www.kde.org/standards/kxmlgui/1.0"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://www.kde.org/standards/kxmlgui/1.0
+                         http://www.kde.org/standards/kxmlgui/1.0/kxmlgui.xsd">
+    <MenuBar/>
+    <ToolBar name="nextcloudToolBar" noMerge="1">
+        <text>Nextcloud Actions</text>
+        <Action name="nextcloud_sync_action"/>
+        <Action name="nextcloud_stop_sync_action"/>
+    </ToolBar>
+    <ToolBar name="blenderToolBar" noMerge="1">
+        <text>Blender Actions</text>
+        <Action name="blender_start_render_action"/>
+        <Action name="blender_stop_render_action"/>
+        <Action name="blender_force_stop_render_action"/>
+    </ToolBar>
+</gui>
