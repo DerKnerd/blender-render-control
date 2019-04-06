@@ -16,6 +16,7 @@ var (
 type ProcessQueue struct {
 	Files          []string
 	process        bool
+	processing     bool
 	blenderCommand *exec.Cmd
 }
 
@@ -30,8 +31,14 @@ func GetProcessQueue() *ProcessQueue {
 func (processQueue *ProcessQueue) Process() {
 	processQueue.process = true
 
-	for len(processQueue.Files) != 0 && processQueue.process {
-		processQueue.ProcessNext()
+	if !processQueue.processing {
+		processQueue.processing = true
+
+		for len(processQueue.Files) != 0 && processQueue.process {
+			processQueue.ProcessNext()
+		}
+
+		processQueue.processing = false
 	}
 }
 
@@ -61,27 +68,27 @@ func (processQueue *ProcessQueue) ProcessNext() {
 	)
 
 	stdoutReader, err := processQueue.blenderCommand.StdoutPipe()
-	websocketClient.SendError("", err)
+	websocketClient.SendError(file, err)
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
-		go ReportScanner(scanner)
+		go ReportScanner(file, scanner)
 	} else {
-		websocketClient.SendError("", err)
+		websocketClient.SendError(file, err)
 	}
 
 	stderrReader, err := processQueue.blenderCommand.StderrPipe()
-	websocketClient.SendError("", err)
+	websocketClient.SendError(file, err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
-		go ReportScanner(scanner)
+		go ReportScanner(file, scanner)
 	} else {
-		websocketClient.SendError("", err)
+		websocketClient.SendError(file, err)
 	}
 
 	err = processQueue.blenderCommand.Start()
 	if err != nil {
-		websocketClient.SendError("", err)
+		websocketClient.SendError(file, err)
 	} else {
 		defer processQueue.blenderCommand.Wait()
 		processQueue.Files = leftFiles

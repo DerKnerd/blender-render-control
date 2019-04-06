@@ -5,13 +5,13 @@ import (
 	"log"
 )
 
-func ReportScanner(scanner *bufio.Scanner) {
+func ReportScanner(file string, scanner *bufio.Scanner) {
 	websocketClient := GetClient()
 
 	for scanner.Scan() {
 		log.Print(scanner.Text())
 		websocketClient.SendResponse(Response{
-			File:    "",
+			File:    file,
 			Message: scanner.Text(),
 		})
 	}
