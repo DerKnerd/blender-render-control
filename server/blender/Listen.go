@@ -15,12 +15,15 @@ func Listen(connection *Connection) {
 
 		switch {
 		case control.Action == Render:
-			processQueue.AddFiles(control.Files)
 			go processQueue.Process()
 		case control.Action == StopRender:
 			go processQueue.StopProcessing(false)
 		case control.Action == ForceStopRender:
 			go processQueue.StopProcessing(true)
+		case control.Action == AddToQueue:
+			processQueue.AddFiles(control.Files)
+		case control.Action == RemoveFromQueue:
+			processQueue.RemoveFiles(control.Files)
 		}
 	}
 }

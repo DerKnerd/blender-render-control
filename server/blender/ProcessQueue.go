@@ -2,6 +2,8 @@ package blender
 
 import (
 	"bufio"
+	"encoding/json"
+	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -14,7 +16,7 @@ var (
 )
 
 type ProcessQueue struct {
-	Files          []string
+	Files          []string `json:"files"`
 	process        bool
 	processing     bool
 	blenderCommand *exec.Cmd
@@ -22,7 +24,9 @@ type ProcessQueue struct {
 
 func GetProcessQueue() *ProcessQueue {
 	if processQueue == nil {
-		processQueue = &ProcessQueue{}
+		processQueue = &ProcessQueue{
+			Files: make([]string, 0),
+		}
 	}
 
 	return processQueue
@@ -97,6 +101,10 @@ func (processQueue *ProcessQueue) ProcessNext() {
 
 func (processQueue *ProcessQueue) AddFiles(files []string) {
 	processQueue.Files = append(processQueue.Files, files...)
+
+	GetClient().SendResponse(Response{
+		Message: "Added files to queue",
+	})
 }
 
 func (processQueue *ProcessQueue) RemoveFiles(files []string) {
@@ -107,4 +115,14 @@ func (processQueue *ProcessQueue) RemoveFiles(files []string) {
 
 		processQueue.Files = append(afterIdx, beforeIdx...)
 	}
+
+	GetClient().SendResponse(Response{
+		Message: "Removed files from queue",
+	})
+}
+
+func ShowQueue(w http.ResponseWriter, r *http.Request) {
+	pQueue := GetProcessQueue()
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(pQueue.Files)
 }

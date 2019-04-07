@@ -27,6 +27,7 @@ func main() {
 	}
 
 	http.HandleFunc("/list-files", blender.ListFiles)
+	http.HandleFunc("/show-queue", blender.ShowQueue)
 	http.HandleFunc("/blender-control", blender.Handle)
 	http.HandleFunc("/nextcloud-control", nextcloud.Handle)
 
