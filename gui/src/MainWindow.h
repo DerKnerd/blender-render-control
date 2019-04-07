@@ -14,6 +14,8 @@
 // Qt headers
 #include <QStatusBar>
 #include <QtWidgets/QProgressBar>
+#include <QtWidgets/QSystemTrayIcon>
+#include <QMenu>
 
 #include <ui_settings.h>
 #include <AppSettings.h>
@@ -50,6 +52,8 @@ private slots:
 
     void startRendering();
 
+    void addToRenderQueue();
+
     void pauseRendering();
 
     void stopRendering();
@@ -61,6 +65,8 @@ public slots:
     void writeBlenderLog(const QString &message, const QString &file);
 
     void blenderConnected();
+
+    void blenderQueueListed(const QList<QString> &files);
 
     void nextcloudConnected();
 
@@ -83,6 +89,11 @@ private:
     QAction *blenderStartRenderAction;
     QAction *blenderPauseRenderAction;
     QAction *blenderStopRenderAction;
+    QAction *blenderAddToQueueAction;
+    QAction *blenderRemoveFromQueueAction;
+    QSystemTrayIcon *trayIcon;
+
+    void removeFromRenderQueue();
 };
 
 #endif // GUIWINDOW_H

@@ -5,11 +5,13 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
     nextcloudClient = new NextcloudClient();
     blenderClient = new BlenderClient();
     currentFilename = new QString("");
+    trayIcon = new QSystemTrayIcon();
+    trayIcon->setIcon(QIcon::fromTheme(QStringLiteral("blender")));
 
     statusbarFilename = new QLabel(statusBar());
     statusbarMessage = new QLabel(statusBar());
     statusbarProgress = new QProgressBar(statusBar());
-    statusbarProgress->setFixedWidth(150);
+    statusbarProgress->setFixedWidth(200);
     statusbarProgress->hide();
 
     setCentralWidget(m_mainView);
@@ -37,10 +39,20 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
     nextcloudListAction->setIcon(QIcon::fromTheme("edit-find"));
     nextcloudListAction->setEnabled(false);
 
+    blenderAddToQueueAction = blenderToolbar->addAction(QStringLiteral("blender_add_to_queue_files"));
+    blenderAddToQueueAction->setText(i18n("Add to render queue"));
+    blenderAddToQueueAction->setIcon(QIcon::fromTheme("list-add"));
+    blenderAddToQueueAction->setVisible(false);
+
     blenderStartRenderAction = blenderToolbar->addAction(QStringLiteral("blender_start_render"));
     blenderStartRenderAction->setText(i18n("Render selected files"));
     blenderStartRenderAction->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     blenderStartRenderAction->setEnabled(false);
+
+    blenderRemoveFromQueueAction = blenderToolbar->addAction(QStringLiteral("blender_remove_from_queue_files"));
+    blenderRemoveFromQueueAction->setText(i18n("Remove from render queue"));
+    blenderRemoveFromQueueAction->setIcon(QIcon::fromTheme("list-remove"));
+    blenderRemoveFromQueueAction->setEnabled(false);
 
     blenderPauseRenderAction = blenderToolbar->addAction(QStringLiteral("blender_pause_render"));
     blenderPauseRenderAction->setText(i18n("Pause rendering"));
@@ -60,14 +72,18 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
     connect(nextcloudClient, &NextcloudClient::connected, this, &MainWindow::nextcloudConnected);
 
     connect(blenderStartRenderAction, &QAction::triggered, this, &MainWindow::startRendering);
+    connect(blenderAddToQueueAction, &QAction::triggered, this, &MainWindow::addToRenderQueue);
+    connect(blenderRemoveFromQueueAction, &QAction::triggered, this, &MainWindow::removeFromRenderQueue);
     connect(blenderPauseRenderAction, &QAction::triggered, this, &MainWindow::pauseRendering);
     connect(blenderStopRenderAction, &QAction::triggered, this, &MainWindow::stopRendering);
 
     connect(blenderClient, &BlenderClient::logReceived, this, &MainWindow::writeBlenderLog);
     connect(blenderClient, &BlenderClient::connected, this, &MainWindow::blenderConnected);
+    connect(blenderClient, &BlenderClient::queueListed, this, &MainWindow::blenderQueueListed);
 
     KActionCollection *actionCollection = this->actionCollection();
     KStandardAction::preferences(this, SLOT(settingsConfigure()), actionCollection);
+    KStandardAction::quit(qApp, SLOT(closeAllWindows()), actionCollection);
 
     setupGUI();
 
@@ -79,14 +95,15 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
 MainWindow::~MainWindow() = default;
 
 void MainWindow::connectToServer() {
-    auto port = "";// guiSettings::serverPort();
-    auto host = "";//guiSettings::serverHost().trimmed();
+    auto port = AppSettings::serverPort();
+    auto host = AppSettings::serverHost().trimmed();
 
     auto nextcloudEndpoint = QStringLiteral("ws://%1:%2/nextcloud-control").arg(host).arg(port);
     auto blenderEndpoint = QStringLiteral("ws://%1:%2/blender-control").arg(host).arg(port);
 
     nextcloudClient->openSocket(nextcloudEndpoint);
     blenderClient->openSocket(blenderEndpoint);
+    blenderClient->getQueue();
 }
 
 void MainWindow::settingsConfigure() {
@@ -119,7 +136,10 @@ void MainWindow::writeNextcloudLog(const QString &message) {
 
 void MainWindow::startRendering() {
     auto files = m_mainView->getFiles();
-    blenderClient->startRender(files);
+    trayIcon->showMessage(i18n("Start rendering"),
+                          i18n("Added %1 file(s) into the queue and started rendering", files.length()));
+    blenderClient->addToQueue(files);
+    blenderClient->startRender();
     m_mainView->uncheckAllFiles();
 }
 
@@ -173,7 +193,20 @@ void MainWindow::writeBlenderLog(const QString &message, const QString &file) {
     if (message.compare("Blender quit") == 0) {
         blenderStopRenderAction->setEnabled(false);
         blenderPauseRenderAction->setEnabled(false);
+        blenderAddToQueueAction->setVisible(false);
+        blenderStartRenderAction->setVisible(true);
         statusbarProgress->hide();
+        blenderClient->getQueue();
+
+        trayIcon->showMessage(filenameWithoutExtension, i18n("The file %1 was rendered", filenameWithoutExtension));
+    } else if (message.compare("Added files to queue") == 0) {
+        blenderClient->getQueue();
+        trayIcon->showMessage("Added files to queue", i18n("Added selected files to rendering queue"));
+    } else if (message.compare("Removed files from queue") == 0) {
+        trayIcon->showMessage("Removed files from queue", i18n("Removed selected files from rendering queue"));
+    } else {
+        blenderAddToQueueAction->setVisible(true);
+        blenderStartRenderAction->setVisible(false);
     }
 }
 
@@ -184,4 +217,24 @@ void MainWindow::blenderConnected() {
 void MainWindow::nextcloudConnected() {
     nextcloudSyncAction->setEnabled(true);
     nextcloudListAction->setEnabled(true);
+}
+
+void MainWindow::addToRenderQueue() {
+    auto files = m_mainView->getFiles();
+    blenderClient->addToQueue(files);
+
+    blenderClient->getQueue();
+}
+
+void MainWindow::removeFromRenderQueue() {
+    auto files = m_mainView->getSelectedFilesFromQueue();
+    blenderClient->removeFromQueue(files);
+
+    blenderClient->getQueue();
+}
+
+void MainWindow::blenderQueueListed(const QList<QString> &files) {
+    blenderRemoveFromQueueAction->setEnabled(files.count() > 0);
+
+    m_mainView->updateQueue(files);
 }

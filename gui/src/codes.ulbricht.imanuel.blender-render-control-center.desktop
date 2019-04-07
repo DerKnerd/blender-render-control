@@ -3,7 +3,7 @@ Type = Application
 
 Name = Blender Render Control Center
 GenericName = A simple application to control the blender render control server
-Icon = codes.ulbricht.imanuel.blender-render-control-center
+Icon = blender
 
-Exec = blender-render-control-center
-StartupWMClass = blender-render-control-center
+Exec = /usr/bin/blender-render-control-center
+StartupWMClass = /usr/bin/blender-render-control-center

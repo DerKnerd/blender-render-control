@@ -8,6 +8,8 @@
 
 #include <QtCore/QArgument>
 #include <QtWebSockets/QWebSocket>
+#include <QNetworkReply>
+#include <types/File.h>
 
 class BlenderClient : public QObject {
 Q_OBJECT
@@ -16,7 +18,7 @@ public:
 
 public slots:
 
-    void startRender(const QStringList &files);
+    void startRender();
 
     void stopRender();
 
@@ -26,16 +28,26 @@ public slots:
 
     void closeSocket();
 
+    void addToQueue(const QStringList &files);
+
+    void removeFromQueue(const QStringList &files);
+
+    void getQueue();
+
 private:
     void onConnected();
 
     void onTextMessageReceived(const QString &message);
+
+    void onFinished(QNetworkReply *reply);
 
     QWebSocket socketClient;
 
 signals:
 
     void connected();
+
+    void queueListed(const QList<QString> &files);
 
     void logReceived(const QString &message, const QString &file);
 };

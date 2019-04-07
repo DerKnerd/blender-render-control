@@ -6,21 +6,21 @@
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonArray>
 #include <QtCore/QFileInfo>
+#include <AppSettings.h>
+#include <QtNetwork/QNetworkAccessManager>
 #include "BlenderClient.h"
 
 BlenderClient::BlenderClient() : socketClient() {
     connect(&socketClient, &QWebSocket::connected, this, &BlenderClient::onConnected);
 }
 
-void BlenderClient::startRender(const QStringList &files) {
+void BlenderClient::startRender() {
     auto socketState = socketClient.state();
 
     if (socketState == QAbstractSocket::ConnectedState) {
         auto data = QJsonObject();
-        auto filesArray = QJsonArray::fromStringList(files);
 
         data["action"] = 0;
-        data["files"] = filesArray;
 
         auto document = QJsonDocument();
         document.setObject(data);
@@ -80,4 +80,71 @@ void BlenderClient::openSocket(const QString &url) {
 
 void BlenderClient::closeSocket() {
     socketClient.close(QWebSocketProtocol::CloseCodeNormal);
+}
+
+void BlenderClient::addToQueue(const QStringList &files) {
+    auto socketState = socketClient.state();
+
+    if (socketState == QAbstractSocket::ConnectedState) {
+        auto data = QJsonObject();
+        auto filesArray = QJsonArray::fromStringList(files);
+
+        data["action"] = 3;
+        data["files"] = filesArray;
+
+        auto document = QJsonDocument();
+        document.setObject(data);
+
+        auto jsonData = document.toJson(QJsonDocument::Compact);
+        socketClient.sendTextMessage(jsonData);
+    }
+}
+
+void BlenderClient::getQueue() {
+    auto accessManager = new QNetworkAccessManager();
+    auto request = QNetworkRequest();
+    request.setUrl(
+            QStringLiteral("http://%1:%2/show-queue").arg(AppSettings::serverHost()).arg(AppSettings::serverPort()));
+    connect(accessManager, &QNetworkAccessManager::finished, this, &BlenderClient::onFinished);
+
+    accessManager->get(request);
+}
+
+void BlenderClient::onFinished(QNetworkReply *reply) {
+    auto files = QList<QString>();
+
+    if (reply->error()) {
+        emit logReceived("", reply->errorString());
+    } else {
+        auto data = reply->readAll();
+        auto logData = data.toStdString();
+        auto document = QJsonDocument::fromJson(data);
+        if (!document.isEmpty() && document.isArray()) {
+            auto arrayData = document.array();
+
+            for (auto i = 0; i < arrayData.count(); ++i) {
+                files.append(arrayData[i].toString());
+            }
+        }
+
+        emit queueListed(files);
+    }
+}
+
+void BlenderClient::removeFromQueue(const QStringList &files) {
+    auto socketState = socketClient.state();
+
+    if (socketState == QAbstractSocket::ConnectedState) {
+        auto data = QJsonObject();
+        auto filesArray = QJsonArray::fromStringList(files);
+
+        data["action"] = 4;
+        data["files"] = filesArray;
+
+        auto document = QJsonDocument();
+        document.setObject(data);
+
+        auto jsonData = document.toJson(QJsonDocument::Compact);
+        socketClient.sendTextMessage(jsonData);
+    }
 }

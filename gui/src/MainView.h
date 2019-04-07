@@ -7,11 +7,13 @@
 
 
 #include <QtCore/QArgument>
+#include <QtCore/QFileInfo>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QLabel>
 #include <QPlainTextEdit>
 #include <QTableWidgetItem>
 #include <QScrollBar>
+
 #include <types/File.h>
 #include <algorithm>
 #include "ui_MainView.h"
@@ -31,9 +33,13 @@ public slots:
 
     void onFilesReceived(QList<File> &data);
 
+    QStringList getSelectedFilesFromQueue() const;
+
     QStringList getFiles() const;
 
     void uncheckAllFiles();
+
+    void updateQueue(const QList<QString> &files);
 
 private:
     Ui::MainView m_ui;

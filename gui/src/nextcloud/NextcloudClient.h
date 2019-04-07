@@ -24,8 +24,6 @@ public slots:
 
     void startFileSync();
 
-    void stopFileSync();
-
     void openSocket(const QString &url);
 
     void closeSocket();

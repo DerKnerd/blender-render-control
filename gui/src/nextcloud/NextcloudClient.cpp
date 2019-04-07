@@ -18,16 +18,6 @@ void NextcloudClient::startFileSync() {
     }
 }
 
-void NextcloudClient::stopFileSync() {
-    auto socketState = socketClient.state();
-
-    if (socketState == QAbstractSocket::ConnectedState) {
-        auto data = QByteArray();
-        data.append(char(1));
-        socketClient.sendBinaryMessage(data);
-    }
-}
-
 void NextcloudClient::onConnected() {
     connect(&socketClient, &QWebSocket::textMessageReceived, this, &NextcloudClient::onTextMessageReceived);
     connect(&socketClient, &QWebSocket::binaryMessageReceived, this, &NextcloudClient::onBinaryMessageReceived);
@@ -54,8 +44,8 @@ void NextcloudClient::closeSocket() {
 void NextcloudClient::listBlendFiles() {
     auto accessManager = new QNetworkAccessManager();
     auto request = QNetworkRequest();
-    request.setUrl(QStringLiteral("http://%1:%2/list-files").arg(AppSettings::serverHost()).arg(
-            AppSettings::serverPort()));
+    request.setUrl(
+            QStringLiteral("http://%1:%2/list-files").arg(AppSettings::serverHost()).arg(AppSettings::serverPort()));
     connect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onFinished);
 
     accessManager->get(request);
