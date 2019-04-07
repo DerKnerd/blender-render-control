@@ -7,13 +7,12 @@ Copyright (C) 2019 by Imanuel Ulbricht <imanuel.ulbricht@outlook.com>
 
 // KF headers
 #include <KCrash>
-#include <KDBusService>
 #include <KLocalizedString>
+#include <KAboutData>
 
 // Qt headers
 #include <QApplication>
 #include <QtCore/QCommandLineParser>
-#include <KAboutData>
 
 int main(int argc, char **argv) {
     QApplication application(argc, argv);
