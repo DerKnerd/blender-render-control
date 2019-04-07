@@ -16,7 +16,7 @@ public:
 
 public slots:
 
-    void startRender(QStringList files);
+    void startRender(const QStringList &files);
 
     void stopRender();
 

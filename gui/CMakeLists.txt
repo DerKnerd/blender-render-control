@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(gui)
+project(blender_render_control_center)
 
 set(QT_MIN_VERSION "5.9.0")
 set(KF_MIN_VERSION "5.37.0")

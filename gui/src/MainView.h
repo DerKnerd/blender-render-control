@@ -8,11 +8,14 @@
 
 #include <QtCore/QArgument>
 #include <QtWidgets/QWidget>
+#include <QtWidgets/QLabel>
 #include <QPlainTextEdit>
 #include <QTableWidgetItem>
 #include <QScrollBar>
 #include <types/File.h>
-#include "ui_mainView.h"
+#include <algorithm>
+#include "ui_MainView.h"
+#include "AppSettings.h"
 
 class MainView : public QWidget {
 Q_OBJECT
@@ -26,9 +29,9 @@ public slots:
 
     void onLogReceived(const QString &qString);
 
-    void onFilesReceived(const QList<File> &data);
+    void onFilesReceived(QList<File> &data);
 
-    QStringList getFiles();
+    QStringList getFiles() const;
 
     void uncheckAllFiles();
 

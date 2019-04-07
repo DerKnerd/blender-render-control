@@ -12,7 +12,7 @@ BlenderClient::BlenderClient() : socketClient() {
     connect(&socketClient, &QWebSocket::connected, this, &BlenderClient::onConnected);
 }
 
-void BlenderClient::startRender(QStringList files) {
+void BlenderClient::startRender(const QStringList &files) {
     auto socketState = socketClient.state();
 
     if (socketState == QAbstractSocket::ConnectedState) {

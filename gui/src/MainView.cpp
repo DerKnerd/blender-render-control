@@ -21,10 +21,13 @@ void MainView::onLogReceived(const QString &qString) {
     m_ui.logData->verticalScrollBar()->setValue(m_ui.logData->verticalScrollBar()->maximum());
 }
 
-void MainView::onFilesReceived(const QList<File> &data) {
-    m_ui.availableFiles->setRowCount(data.count());
-    for (int i = 0; i < data.count(); ++i) {
-        auto file = data[i];
+void MainView::onFilesReceived(QList<File> &data) {
+    m_ui.availableFiles->setRowCount(data.size());
+
+    std::sort(data.rbegin(), data.rend());
+
+    for (int i = 0; i < data.size(); ++i) {
+        const auto &file = data.at(i);
 
         auto nameElement = new QTableWidgetItem();
         nameElement->setText(file.getName());
@@ -48,7 +51,7 @@ void MainView::onFilesReceived(const QList<File> &data) {
     m_ui.availableFiles->resizeColumnsToContents();
 }
 
-QStringList MainView::getFiles() {
+QStringList MainView::getFiles() const {
     auto items = m_ui.availableFiles->findItems(QStringLiteral(""), MatchContains);
     auto selectedFiles = QStringList();
 

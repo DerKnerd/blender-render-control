@@ -2,15 +2,21 @@
 #define GUIWINDOW_H
 
 #include <nextcloud/NextcloudClient.h>
-#include <nextcloud/BlenderClient.h>
+#include <blender/BlenderClient.h>
 #include <utility>
 
+// KF headers
 #include <KXmlGuiWindow>
+#include <KActionCollection>
+#include <KConfigDialog>
+#include <KToolBar>
+
+// Qt headers
 #include <QStatusBar>
 #include <QtWidgets/QProgressBar>
 
-#include "ui_settings.h"
-#include "guiSettings.h"
+#include <ui_settings.h>
+#include <AppSettings.h>
 #include "MainView.h"
 
 class guiView;
@@ -23,18 +29,18 @@ class guiView;
  * @author Imanuel Ulbricht <imanuel.ulbricht@outlook.com>
  * @version 0.1
  */
-class GuiWindow : public KXmlGuiWindow {
+class MainWindow : public KXmlGuiWindow {
 Q_OBJECT
 public:
     /**
      * Default Constructor
      */
-    GuiWindow();
+    MainWindow();
 
     /**
      * Default Destructor
      */
-    ~GuiWindow() override;
+    ~MainWindow() override;
 
 private slots:
 
@@ -73,7 +79,6 @@ private:
     void handleSettingsChanged();
 
     QAction *nextcloudSyncAction;
-    QAction *nextcloudStopSyncAction;
     QAction *nextcloudListAction;
     QAction *blenderStartRenderAction;
     QAction *blenderPauseRenderAction;

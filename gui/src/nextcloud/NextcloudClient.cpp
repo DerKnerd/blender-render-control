@@ -54,8 +54,8 @@ void NextcloudClient::closeSocket() {
 void NextcloudClient::listBlendFiles() {
     auto accessManager = new QNetworkAccessManager();
     auto request = QNetworkRequest();
-    request.setUrl(
-            QStringLiteral("http://%1:%2/list-files").arg(guiSettings::serverHost()).arg(guiSettings::serverPort()));
+    request.setUrl(QStringLiteral("http://%1:%2/list-files").arg(AppSettings::serverHost()).arg(
+            AppSettings::serverPort()));
     connect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onFinished);
 
     accessManager->get(request);

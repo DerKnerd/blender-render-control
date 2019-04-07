@@ -13,8 +13,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <types/File.h>
 #include <iostream>
-#include <guiSettings.h>
-#include "guidebug.h"
+#include <AppSettings.h>
 
 class NextcloudClient : public QObject {
 Q_OBJECT
@@ -50,7 +49,7 @@ signals:
 
     void logReceived(const QString &message);
 
-    void filesReceived(const QList<File> files);
+    void filesReceived(QList<File> &files);
 };
 
 

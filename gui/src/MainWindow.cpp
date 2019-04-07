@@ -1,15 +1,6 @@
-// application headers
-#include "guiwindow.h"
+#include "MainWindow.h"
 
-#include "MainView.h"
-#include "guidebug.h"
-
-// KF headers
-#include <KActionCollection>
-#include <KConfigDialog>
-#include <KToolBar>
-
-GuiWindow::GuiWindow() : KXmlGuiWindow() {
+MainWindow::MainWindow() : KXmlGuiWindow() {
     m_mainView = new MainView(this);
     nextcloudClient = new NextcloudClient();
     blenderClient = new BlenderClient();
@@ -22,6 +13,7 @@ GuiWindow::GuiWindow() : KXmlGuiWindow() {
     statusbarProgress->hide();
 
     setCentralWidget(m_mainView);
+    setWindowTitle(i18n("Blender Render Control Center"));
 
     statusBar()->addWidget(statusbarFilename);
     statusBar()->addWidget(statusbarMessage, 1);
@@ -63,33 +55,32 @@ GuiWindow::GuiWindow() : KXmlGuiWindow() {
     connect(nextcloudSyncAction, &QAction::triggered, nextcloudClient, &NextcloudClient::startFileSync);
     connect(nextcloudListAction, &QAction::triggered, nextcloudClient, &NextcloudClient::listBlendFiles);
 
-    connect(nextcloudClient, &NextcloudClient::logReceived, this, &GuiWindow::writeNextcloudLog);
+    connect(nextcloudClient, &NextcloudClient::logReceived, this, &MainWindow::writeNextcloudLog);
     connect(nextcloudClient, &NextcloudClient::filesReceived, m_mainView, &MainView::onFilesReceived);
-    connect(nextcloudClient, &NextcloudClient::connected, this, &GuiWindow::nextcloudConnected);
+    connect(nextcloudClient, &NextcloudClient::connected, this, &MainWindow::nextcloudConnected);
 
-    connect(blenderStartRenderAction, &QAction::triggered, this, &GuiWindow::startRendering);
-    connect(blenderPauseRenderAction, &QAction::triggered, this, &GuiWindow::pauseRendering);
-    connect(blenderStopRenderAction, &QAction::triggered, this, &GuiWindow::stopRendering);
+    connect(blenderStartRenderAction, &QAction::triggered, this, &MainWindow::startRendering);
+    connect(blenderPauseRenderAction, &QAction::triggered, this, &MainWindow::pauseRendering);
+    connect(blenderStopRenderAction, &QAction::triggered, this, &MainWindow::stopRendering);
 
-    connect(blenderClient, &BlenderClient::logReceived, this, &GuiWindow::writeBlenderLog);
-    connect(blenderClient, &BlenderClient::connected, this, &GuiWindow::blenderConnected);
+    connect(blenderClient, &BlenderClient::logReceived, this, &MainWindow::writeBlenderLog);
+    connect(blenderClient, &BlenderClient::connected, this, &MainWindow::blenderConnected);
 
     KActionCollection *actionCollection = this->actionCollection();
     KStandardAction::preferences(this, SLOT(settingsConfigure()), actionCollection);
 
     setupGUI();
 
-    if (!guiSettings::serverHost().trimmed().isEmpty()) {
+    if (!AppSettings::serverHost().trimmed().isEmpty()) {
         connectToServer();
     }
 }
 
-GuiWindow::~GuiWindow() {
-}
+MainWindow::~MainWindow() = default;
 
-void GuiWindow::connectToServer() {
-    auto port = guiSettings::serverPort();
-    auto host = guiSettings::serverHost().trimmed();
+void MainWindow::connectToServer() {
+    auto port = "";// guiSettings::serverPort();
+    auto host = "";//guiSettings::serverHost().trimmed();
 
     auto nextcloudEndpoint = QStringLiteral("ws://%1:%2/nextcloud-control").arg(host).arg(port);
     auto blenderEndpoint = QStringLiteral("ws://%1:%2/blender-control").arg(host).arg(port);
@@ -98,52 +89,53 @@ void GuiWindow::connectToServer() {
     blenderClient->openSocket(blenderEndpoint);
 }
 
-void GuiWindow::settingsConfigure() {
+void MainWindow::settingsConfigure() {
     if (KConfigDialog::showDialog(QStringLiteral("settings"))) {
         return;
     }
 
     QWidget *generalSettingsPage = new QWidget;
     m_settings.setupUi(generalSettingsPage);
-    KConfigDialog *dialog = new KConfigDialog(this, QStringLiteral("settings"), guiSettings::self());
+    KConfigDialog *dialog = new KConfigDialog(this, QStringLiteral("settings"),
+                                              AppSettings::self());
     auto page = dialog->addPage(generalSettingsPage, i18n("General"), QStringLiteral("package_setting"));
     page->setIcon(QIcon::fromTheme("systemsettings"));
-    connect(dialog, &KConfigDialog::settingsChanged, this, &GuiWindow::handleSettingsChanged);
+    connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::handleSettingsChanged);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
 }
 
-void GuiWindow::handleSettingsChanged() {
+void MainWindow::handleSettingsChanged() {
     nextcloudClient->closeSocket();
     blenderClient->closeSocket();
 
     connectToServer();
 }
 
-void GuiWindow::writeNextcloudLog(const QString &message) {
+void MainWindow::writeNextcloudLog(const QString &message) {
     m_mainView->onLogReceived(message);
     statusbarMessage->setText(message);
 }
 
-void GuiWindow::startRendering() {
+void MainWindow::startRendering() {
     auto files = m_mainView->getFiles();
     blenderClient->startRender(files);
     m_mainView->uncheckAllFiles();
 }
 
-void GuiWindow::pauseRendering() {
+void MainWindow::pauseRendering() {
     blenderClient->pauseRender();
 
     statusbarProgress->setRange(0, 0);
 }
 
-void GuiWindow::stopRendering() {
+void MainWindow::stopRendering() {
     blenderClient->stopRender();
 
     m_mainView->onLogReceived(i18n("Stopped rendering"));
 }
 
-void GuiWindow::writeBlenderLog(const QString &message, const QString &file) {
+void MainWindow::writeBlenderLog(const QString &message, const QString &file) {
     blenderStopRenderAction->setEnabled(true);
     blenderPauseRenderAction->setEnabled(true);
 
@@ -185,11 +177,11 @@ void GuiWindow::writeBlenderLog(const QString &message, const QString &file) {
     }
 }
 
-void GuiWindow::blenderConnected() {
+void MainWindow::blenderConnected() {
     blenderStartRenderAction->setEnabled(true);
 }
 
-void GuiWindow::nextcloudConnected() {
+void MainWindow::nextcloudConnected() {
     nextcloudSyncAction->setEnabled(true);
     nextcloudListAction->setEnabled(true);
 }

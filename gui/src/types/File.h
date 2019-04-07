@@ -30,6 +30,8 @@ public:
 
     void setModifiedDate(const QDateTime &modifiedDate);
 
+    bool operator<(const File &rhs) const;
+
 private:
 
     QString name;

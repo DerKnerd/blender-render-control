@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component type="desktop-application">
-  <id>org.example.gui.desktop</id>
+  <id>codes.ulbricht.imanuel.blender-render-control-app.desktop</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license> https://www.freedesktop.org/software/appstream/docs/chap-Metadata.html#tag-metadata_license </project_license>
-  <name>gui</name>
+  <name>Blender Render Control Center</name>
   <summary> https://www.freedesktop.org/software/appstream/docs/chap-Metadata.html#tag-summary </summary>
   <description>
     <p> https://www.freedesktop.org/software/appstream/docs/chap-Metadata.html#tag-description </p>
@@ -17,7 +17,7 @@
     </screenshot>
   </screenshots>
   <provides>
-    <binary>gui</binary>
+    <binary>blender-render-control-center</binary>
   </provides>
   <project_group>KDE</project_group>
 </component>

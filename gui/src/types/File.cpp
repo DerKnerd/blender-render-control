@@ -35,3 +35,7 @@ const QDateTime &File::getModifiedDate() const {
 void File::setModifiedDate(const QDateTime &modifiedDate) {
     modified_date = modifiedDate;
 }
+
+bool File::operator<(const File &rhs) const {
+    return modified_date < rhs.modified_date;
+}
