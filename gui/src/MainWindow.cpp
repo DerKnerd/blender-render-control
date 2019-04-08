@@ -7,6 +7,7 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
     currentFilename = new QString("");
     trayIcon = new QSystemTrayIcon();
     trayIcon->setIcon(QIcon::fromTheme(QStringLiteral("blender")));
+    trayIcon->show();
 
     statusbarFilename = new QLabel(statusBar());
     statusbarMessage = new QLabel(statusBar());
@@ -83,7 +84,11 @@ MainWindow::MainWindow() : KXmlGuiWindow() {
 
     KActionCollection *actionCollection = this->actionCollection();
     KStandardAction::preferences(this, SLOT(settingsConfigure()), actionCollection);
-    KStandardAction::quit(qApp, SLOT(closeAllWindows()), actionCollection);
+
+    auto quitAction = KStandardAction::quit(this, SLOT(quitApplication()), actionCollection);
+    auto contextMenu = new QMenu();
+    contextMenu->addAction(quitAction);
+    trayIcon->setContextMenu(contextMenu);
 
     setupGUI();
 
@@ -203,6 +208,7 @@ void MainWindow::writeBlenderLog(const QString &message, const QString &file) {
         blenderClient->getQueue();
         trayIcon->showMessage("Added files to queue", i18n("Added selected files to rendering queue"));
     } else if (message.compare("Removed files from queue") == 0) {
+        blenderClient->getQueue();
         trayIcon->showMessage("Removed files from queue", i18n("Removed selected files from rendering queue"));
     } else {
         blenderAddToQueueAction->setVisible(true);
@@ -237,4 +243,9 @@ void MainWindow::blenderQueueListed(const QList<QString> &files) {
     blenderRemoveFromQueueAction->setEnabled(files.count() > 0);
 
     m_mainView->updateQueue(files);
+}
+
+void MainWindow::quitApplication() {
+    trayIcon->hide();
+    QApplication::closeAllWindows();
 }

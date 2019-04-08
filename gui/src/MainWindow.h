@@ -58,6 +58,8 @@ private slots:
 
     void stopRendering();
 
+    void quitApplication();
+
 public slots:
 
     void writeNextcloudLog(const QString &message);

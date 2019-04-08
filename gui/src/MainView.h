@@ -39,7 +39,7 @@ public slots:
 
     void uncheckAllFiles();
 
-    void updateQueue(const QList<QString> &files);
+    void updateQueue(const QStringList &files);
 
 private:
     Ui::MainView m_ui;

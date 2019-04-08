@@ -78,13 +78,15 @@ void MainView::uncheckAllFiles() {
     }
 }
 
-void MainView::updateQueue(const QList<QString> &files) {
+void MainView::updateQueue(const QStringList &files) {
     m_ui.renderQueue->clear();
-    for (int i = 0; i < files.count(); ++i) {
-        auto fileInfo = QFileInfo(files[i]);
-        auto filenameWithoutExtension = fileInfo.fileName().section(".", 0, 0);
 
+    for (const auto &file : files) {
+        auto fileInfo = QFileInfo(file);
+        auto filenameWithoutExtension = fileInfo.fileName().section(".", 0, 0);
         auto row = new QListWidgetItem();
+
+        row->setData(Qt::UserRole, file);
         row->setText(filenameWithoutExtension);
         m_ui.renderQueue->addItem(row);
     }
@@ -92,10 +94,12 @@ void MainView::updateQueue(const QList<QString> &files) {
 
 QStringList MainView::getSelectedFilesFromQueue() const {
     auto stringList = QStringList();
-
     auto selectedItems = m_ui.renderQueue->selectedItems();
-    for (auto &selectedItem : selectedItems) {
-        stringList.append(selectedItem->text());
+
+    for (const auto &selectedItem : selectedItems) {
+        auto data = selectedItem->data(Qt::UserRole).toString();
+
+        stringList.append(data);
     }
 
     return stringList;
