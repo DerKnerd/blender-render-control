@@ -5,5 +5,5 @@ Name = Blender Render Control Center
 GenericName = A simple application to control the blender render control server
 Icon = blender
 
-Exec = /usr/bin/blender-render-control-center
-StartupWMClass = /usr/bin/blender-render-control-center
+Exec = /usr/local/bin/blender_render_control_center
+StartupWMClass = /usr/local/bin/blender_render_control_center
