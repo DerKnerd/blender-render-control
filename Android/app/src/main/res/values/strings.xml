@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Blender Render Control App</string>
+    <string name="navigation_drawer_open">Open Drawer</string>
+    <string name="navigation_drawer_close">Close Drawer</string>
+    <string name="nav_blender">Blender</string>
+    <string name="nav_blender_start_render_queue">Start Render Queue</string>
+    <string name="nav_blender_stop_render_queue">Stop Render Queue</string>
+    <string name="nav_blender_pause_render_queue">Pause Render Queue</string>
+    <string name="nav_nextcloud">Nextcloud</string>
+    <string name="nav_nextcloud_sync_files">Sync Files</string>
+    <string name="nav_blender_add_to_render_queue">Add to Render Queue</string>
+    <string name="add_to_render_queue">Add to Render Queue</string>
+</resources>
