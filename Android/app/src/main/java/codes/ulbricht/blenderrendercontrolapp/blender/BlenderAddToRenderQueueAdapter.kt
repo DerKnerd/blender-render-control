@@ -4,11 +4,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import codes.ulbricht.blenderrendercontrolapp.model.File
-import org.jetbrains.anko.checkBox
-import org.jetbrains.anko.frameLayout
-import org.jetbrains.anko.matchParent
+import org.jetbrains.anko.*
 import org.jetbrains.anko.sdk27.coroutines.onCheckedChange
-import org.jetbrains.anko.wrapContent
 
 class BlenderAddToRenderQueueAdapter : BaseAdapter() {
     var items: List<File> = ArrayList()
@@ -27,6 +24,7 @@ class BlenderAddToRenderQueueAdapter : BaseAdapter() {
             frameLayout {
                 lparams(width = matchParent, height = wrapContent)
                 checkBox(item.name) {
+                    padding = dip(16)
                     onCheckedChange { buttonView, isChecked ->
                         if (isChecked) {
                             selectedFiles.add(item)
