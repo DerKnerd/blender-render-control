@@ -1,7 +1,8 @@
-package nextcloud
+package socket
 
 import (
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -11,9 +12,8 @@ var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		Subprotocols:    []string{"binary", "text"},
 	}
-	currentNextcloudClient *Client
+	currentClient *Client
 )
 
 type Client struct {
@@ -21,11 +21,11 @@ type Client struct {
 }
 
 func GetClient() *Client {
-	if currentNextcloudClient == nil {
-		currentNextcloudClient = &Client{connections: make([]*Connection, 0)}
+	if currentClient == nil {
+		currentClient = &Client{connections: make([]*Connection, 0)}
 	}
 
-	return currentNextcloudClient
+	return currentClient
 }
 
 func (client *Client) AddConnection(connection *Connection) {
@@ -48,14 +48,33 @@ func (client *Client) ConvertHttpToWs(w http.ResponseWriter, r *http.Request) (*
 	return websocketConnection, nil
 }
 
-func (client *Client) SendMessage(message string) {
+func (client *Client) SendResponse(response Response) {
+	client.Send(response)
+}
+
+func (client *Client) SendError(file string, err error) {
 	for _, connection := range client.connections {
-		connection.SendMessage(message)
+		connection.SendError(file, err)
 	}
 }
 
-func (client *Client) SendError(err error) {
+func (client *Client) Send(v interface{}) {
 	for _, connection := range client.connections {
-		connection.SendError(err)
+		err := connection.Connection.WriteJSON(v)
+
+		if err != nil {
+			if serr, ok := err.(*net.OpError); ok {
+				if !serr.Temporary() {
+					err := connection.Connection.Close()
+					if err != nil {
+						log.Printf(err.Error())
+					}
+				} else {
+					client.SendError("", err)
+				}
+			} else {
+				client.SendError("", err)
+			}
+		}
 	}
 }

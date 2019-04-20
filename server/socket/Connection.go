@@ -1,4 +1,4 @@
-package nextcloud
+package socket
 
 import (
 	"log"
@@ -10,16 +10,19 @@ type Connection struct {
 	Connection *websocket.Conn
 }
 
-func (connection *Connection) SendMessage(message string) {
-	err := connection.Connection.WriteMessage(websocket.TextMessage, []byte(message))
+func (connection *Connection) SendResponse(response Response) {
+	err := connection.Connection.WriteJSON(response)
 	if err != nil {
 		log.Printf(err.Error())
 	}
 }
 
-func (connection *Connection) SendError(err error) {
+func (connection *Connection) SendError(file string, err error) {
 	if err != nil {
-		connection.SendMessage(err.Error())
+		connection.SendResponse(Response{
+			File:    file,
+			Message: err.Error(),
+		})
 	}
 }
 

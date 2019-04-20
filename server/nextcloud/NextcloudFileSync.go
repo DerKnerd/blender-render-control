@@ -5,20 +5,15 @@ import (
 	"os/exec"
 
 	"../config"
+	"../socket"
 )
 
 var (
 	processes []*exec.Cmd
 )
 
-func StopSyncNextcloudFiles() {
-	for _, process := range processes {
-		_ = process.Process.Kill()
-	}
-}
-
-func SyncNextcloudFiles() {
-	websocketClient := GetClient()
+func SyncNextcloudFiles() error {
+	websocketClient := socket.GetClient()
 
 	cmd := exec.Command(
 		config.GlobalConfig.Nextcloud.Executable,
@@ -29,35 +24,35 @@ func SyncNextcloudFiles() {
 	processes = append(processes, cmd)
 
 	stdoutReader, err := cmd.StdoutPipe()
-	websocketClient.SendError(err)
+	websocketClient.Send(err)
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
 		go ReportScanner(scanner)
 	} else {
-		websocketClient.SendError(err)
+		websocketClient.Send(err)
+		return err
 	}
 
 	stderrReader, err := cmd.StderrPipe()
-	websocketClient.SendError(err)
+	websocketClient.Send(err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
 		go ReportScanner(scanner)
 	} else {
-		websocketClient.SendError(err)
+		websocketClient.Send(err)
+		return err
 	}
 
-	websocketClient.SendMessage("Start Nextcloud sync")
+	websocketClient.Send("Start Nextcloud sync")
 
 	err = cmd.Start()
-	if err != nil {
-		websocketClient.SendError(err)
+	if err == nil {
+		go cmd.Wait()
 	} else {
-		err = cmd.Wait()
-		if err != nil {
-			websocketClient.SendMessage("Finished Nextcloud sync")
-		} else {
-			websocketClient.SendError(err)
-		}
+		websocketClient.Send(err)
+		return err
 	}
+
+	return nil
 }

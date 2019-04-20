@@ -3,13 +3,15 @@ package nextcloud
 import (
 	"bufio"
 	"log"
+
+	"../socket"
 )
 
 func ReportScanner(scanner *bufio.Scanner) {
-	websocketClient := GetClient()
+	websocketClient := socket.GetClient()
 
 	for scanner.Scan() {
 		log.Print(scanner.Text())
-		websocketClient.SendMessage(scanner.Text())
+		websocketClient.Send(scanner.Text())
 	}
 }

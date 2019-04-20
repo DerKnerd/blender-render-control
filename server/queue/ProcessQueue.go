@@ -1,13 +1,11 @@
-package blender
+package queue
 
 import (
+	"../socket"
 	"bufio"
-	"encoding/json"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"sort"
 )
 
 var (
@@ -16,16 +14,16 @@ var (
 )
 
 type ProcessQueue struct {
-	Files          []string `json:"files"`
+	Items          []QueueEntry `json:"items"`
+	Processing     bool         `json:"processing"`
 	process        bool
-	processing     bool
 	blenderCommand *exec.Cmd
 }
 
 func GetProcessQueue() *ProcessQueue {
 	if processQueue == nil {
 		processQueue = &ProcessQueue{
-			Files: make([]string, 0),
+			Items: make([]QueueEntry, 0),
 		}
 	}
 
@@ -35,20 +33,20 @@ func GetProcessQueue() *ProcessQueue {
 func (processQueue *ProcessQueue) Process() {
 	processQueue.process = true
 
-	if !processQueue.processing {
-		processQueue.processing = true
+	if !processQueue.Processing {
+		processQueue.Processing = true
 
-		for len(processQueue.Files) != 0 && processQueue.process {
+		for len(processQueue.Items) != 0 && processQueue.process {
 			processQueue.ProcessNext()
 		}
 
-		processQueue.processing = false
+		processQueue.Processing = false
 	}
 }
 
 func (processQueue *ProcessQueue) StopProcessing(force bool) {
 	processQueue.process = false
-	websocketClient := GetClient()
+	websocketClient := socket.GetClient()
 
 	if force && processQueue.blenderCommand != nil {
 		err := processQueue.blenderCommand.Process.Kill()
@@ -57,8 +55,9 @@ func (processQueue *ProcessQueue) StopProcessing(force bool) {
 }
 
 func (processQueue *ProcessQueue) ProcessNext() {
-	file, leftFiles := processQueue.Files[0], processQueue.Files[1:]
-	websocketClient := GetClient()
+	queueEntry, leftFiles := processQueue.Items[0], processQueue.Items[1:]
+	file := queueEntry.Path
+	websocketClient := socket.GetClient()
 
 	processQueue.blenderCommand = exec.Command(
 		"/usr/bin/blender",
@@ -67,8 +66,8 @@ func (processQueue *ProcessQueue) ProcessNext() {
 		"-P",
 		path.Join(workingDir, "render_all_cameras.py"),
 		"--",
-		"7680",
-		"4320",
+		string(queueEntry.Width),
+		string(queueEntry.Height),
 	)
 
 	stdoutReader, err := processQueue.blenderCommand.StdoutPipe()
@@ -76,7 +75,7 @@ func (processQueue *ProcessQueue) ProcessNext() {
 
 	if err == nil {
 		scanner := bufio.NewScanner(stdoutReader)
-		go ReportScanner(file, scanner)
+		go socket.ReportScannerWithFile(file, scanner)
 	} else {
 		websocketClient.SendError(file, err)
 	}
@@ -85,7 +84,7 @@ func (processQueue *ProcessQueue) ProcessNext() {
 	websocketClient.SendError(file, err)
 	if err == nil {
 		scanner := bufio.NewScanner(stderrReader)
-		go ReportScanner(file, scanner)
+		go socket.ReportScannerWithFile(file, scanner)
 	} else {
 		websocketClient.SendError(file, err)
 	}
@@ -95,34 +94,30 @@ func (processQueue *ProcessQueue) ProcessNext() {
 		websocketClient.SendError(file, err)
 	} else {
 		defer processQueue.blenderCommand.Wait()
-		processQueue.Files = leftFiles
+		processQueue.Items = leftFiles
 	}
 }
 
-func (processQueue *ProcessQueue) AddFiles(files []string) {
-	processQueue.Files = append(processQueue.Files, files...)
+func (processQueue *ProcessQueue) AddFiles(entries []QueueEntry) {
+	processQueue.Items = append(processQueue.Items, entries...)
 
-	GetClient().SendResponse(Response{
-		Message: "Added files to queue",
-	})
+	socket.GetClient().Send("Added entries to queue")
 }
 
 func (processQueue *ProcessQueue) RemoveFiles(files []string) {
 	for _, file := range files {
-		idx := sort.SearchStrings(processQueue.Files, file)
-		afterIdx := processQueue.Files[idx+1:]
-		beforeIdx := processQueue.Files[:idx]
+		var idx int
+		var item QueueEntry
+		for idx, item = range processQueue.Items {
+			if item.Path == file {
+				break
+			}
+		}
+		afterIdx := processQueue.Items[idx+1:]
+		beforeIdx := processQueue.Items[:idx]
 
-		processQueue.Files = append(afterIdx, beforeIdx...)
+		processQueue.Items = append(afterIdx, beforeIdx...)
 	}
 
-	GetClient().SendResponse(Response{
-		Message: "Removed files from queue",
-	})
-}
-
-func ShowQueue(w http.ResponseWriter, r *http.Request) {
-	pQueue := GetProcessQueue()
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(pQueue.Files)
+	socket.GetClient().Send("Removed files from queue")
 }

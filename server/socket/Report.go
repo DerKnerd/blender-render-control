@@ -1,11 +1,11 @@
-package blender
+package socket
 
 import (
 	"bufio"
 	"log"
 )
 
-func ReportScanner(file string, scanner *bufio.Scanner) {
+func ReportScannerWithFile(file string, scanner *bufio.Scanner) {
 	websocketClient := GetClient()
 
 	for scanner.Scan() {

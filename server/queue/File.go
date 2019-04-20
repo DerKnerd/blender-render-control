@@ -1,4 +1,4 @@
-package blender
+package queue
 
 import (
 	"os"

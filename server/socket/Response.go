@@ -1,4 +1,4 @@
-package blender
+package socket
 
 type Response struct {
 	Message string `json:"message,omitempty"`

@@ -8,7 +8,9 @@ import (
 
 	"./blender"
 	"./config"
+	socketLog "./log"
 	"./nextcloud"
+	"./queue"
 )
 
 func main() {
@@ -26,10 +28,10 @@ func main() {
 		log.SetOutput(os.Stdout)
 	}
 
-	http.HandleFunc("/list-files", blender.ListFiles)
-	http.HandleFunc("/show-queue", blender.ShowQueue)
-	http.HandleFunc("/blender-control", blender.Handle)
-	http.HandleFunc("/nextcloud-control", nextcloud.Handle)
+	http.HandleFunc("/log", socketLog.HandleSocket)
+	http.HandleFunc("/queue", queue.HandleHttp)
+	http.HandleFunc("/blender", blender.HandleHttp)
+	http.HandleFunc("/nextcloud", nextcloud.HandleHttp)
 
 	log.Printf("Listening on address and port %s:%d", *config.GetFlags().Address, *config.GetFlags().Port)
 	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *config.GetFlags().Address, *config.GetFlags().Port), nil)
