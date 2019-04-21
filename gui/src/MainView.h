@@ -5,27 +5,23 @@
 #ifndef GUI_MAINWINDOW_H
 #define GUI_MAINWINDOW_H
 
+#include <QtWidgets/QScrollBar>
 
-#include <QtCore/QArgument>
 #include <QtCore/QFileInfo>
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QLabel>
-#include <QPlainTextEdit>
-#include <QTableWidgetItem>
-#include <QScrollBar>
 
 #include <types/File.h>
 #include <algorithm>
+#include <types/QueueEntry.h>
 #include "ui_MainView.h"
 #include "AppSettings.h"
+
+using namespace std;
 
 class MainView : public QWidget {
 Q_OBJECT
 
 public:
     explicit MainView(QWidget *parent);
-
-    ~MainView() override;
 
 public slots:
 
@@ -35,7 +31,7 @@ public slots:
 
     QStringList getSelectedFilesFromQueue() const;
 
-    QStringList getFiles() const;
+    QList<QueueEntry> getFiles() const;
 
     void uncheckAllFiles();
 

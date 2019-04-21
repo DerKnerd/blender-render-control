@@ -5,34 +5,69 @@
 #ifndef GUI_FILE_H
 #define GUI_FILE_H
 
-
 #include <QtCore/QString>
 #include <QtCore/QDateTime>
 
 class File {
+public:
+    bool operator==(const File &rhs) const {
+        return modified_date == rhs.modified_date;
+    }
+
+    bool operator!=(const File &rhs) const {
+        return !(rhs == *this);
+    }
+
+    bool operator<(const File &rhs) const {
+        return modified_date < rhs.modified_date;
+    }
+
+    bool operator>(const File &rhs) const {
+        return rhs < *this;
+    }
+
+    bool operator<=(const File &rhs) const {
+        return !(rhs < *this);
+    }
+
+    bool operator>=(const File &rhs) const {
+        return !(*this < rhs);
+    }
+
+    const QString &getPath() const {
+        return path;
+    }
+
+    void setPath(const QString &path) {
+        File::path = path;
+    }
+
+    const QString &getName() const {
+        return name;
+    }
+
+    void setName(const QString &name) {
+        File::name = name;
+    }
+
+    int getSize() const {
+        return size;
+    }
+
+    void setSize(int size) {
+        File::size = size;
+    }
+
+    const QDateTime &getModifiedDate() const {
+        return modified_date;
+    }
+
+    void setModifiedDate(const QDateTime &modifiedDate) {
+        modified_date = modifiedDate;
+    }
 
 private:
     QString path;
-public:
-    const QString &getPath() const;
-
-    void setPath(const QString &path);
-
-    const QString &getName() const;
-
-    void setName(const QString &name);
-
-    int getSize() const;
-
-    void setSize(int size);
-
-    const QDateTime &getModifiedDate() const;
-
-    void setModifiedDate(const QDateTime &modifiedDate);
-
-    bool operator<(const File &rhs) const;
-
-private:
 
     QString name;
 

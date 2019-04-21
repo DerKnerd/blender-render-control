@@ -4,81 +4,78 @@
 
 #include "NextcloudClient.h"
 
-NextcloudClient::NextcloudClient() : socketClient() {
-    connect(&socketClient, &QWebSocket::connected, this, &NextcloudClient::onConnected);
+NextcloudClient::NextcloudClient() {
+    accessManager = new QNetworkAccessManager();
 }
 
-void NextcloudClient::startFileSync() {
-    auto socketState = socketClient.state();
+void NextcloudClient::startSync() {
+    connect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onStartSyncFinished);
 
-    if (socketState == QAbstractSocket::ConnectedState) {
-        auto data = QByteArray();
-        data.append(char(0));
-        socketClient.sendBinaryMessage(data);
-    }
+    auto data = QByteArray();
+    auto request = this->getRequest();
+
+    accessManager->post(request, data);
 }
 
-void NextcloudClient::onConnected() {
-    connect(&socketClient, &QWebSocket::textMessageReceived, this, &NextcloudClient::onTextMessageReceived);
-    connect(&socketClient, &QWebSocket::binaryMessageReceived, this, &NextcloudClient::onBinaryMessageReceived);
+void NextcloudClient::listFiles() {
+    connect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onListFilesFinished);
 
-    emit connected();
-}
-
-void NextcloudClient::onTextMessageReceived(const QString &message) {
-    emit logReceived(message);
-}
-
-void NextcloudClient::onBinaryMessageReceived(const QByteArray &data) {
-    emit logReceived(data);
-}
-
-void NextcloudClient::openSocket(const QString &url) {
-    socketClient.open(QUrl(url));
-}
-
-void NextcloudClient::closeSocket() {
-    socketClient.close(QWebSocketProtocol::CloseCodeNormal);
-}
-
-void NextcloudClient::listBlendFiles() {
-    auto accessManager = new QNetworkAccessManager();
-    auto request = QNetworkRequest();
-    request.setUrl(
-            QStringLiteral("http://%1:%2/list-files").arg(AppSettings::serverHost()).arg(AppSettings::serverPort()));
-    connect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onFinished);
+    auto request = this->getRequest();
 
     accessManager->get(request);
 }
 
-void NextcloudClient::onFinished(QNetworkReply *reply) {
-    auto files = QList<File>();
+void NextcloudClient::onStartSyncFinished(QNetworkReply *reply) {
+    disconnect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onStartSyncFinished);
 
-    if (reply->error()) {
-        emit logReceived(reply->errorString());
-    } else {
+    parseError(reply, [this]() {
+        emit startSyncFinished();
+    });
+}
+
+void NextcloudClient::onListFilesFinished(QNetworkReply *reply) {
+    disconnect(accessManager, &QNetworkAccessManager::finished, this, &NextcloudClient::onListFilesFinished);
+
+    parseError(reply, [this, reply]() {
+        auto files = new QList<File>();
         auto data = reply->readAll();
-        auto logData = data.toStdString();
-        auto document = QJsonDocument::fromJson(data);
-        if (!document.isEmpty() && document.isArray()) {
-            auto arrayData = document.array();
+        auto jsonDoc = QJsonDocument::fromJson(data);
 
-            for (auto i = 0; i < arrayData.count(); ++i) {
-                auto item = arrayData[i];
-                if (item.isObject()) {
-                    auto file = File();
-                    auto object = item.toObject();
-                    auto date = QDateTime::fromString(object["modified_date"].toString(), Qt::DateFormat::ISODate);
-
-                    file.setModifiedDate(date);
-                    file.setName(object[QStringLiteral("name")].toString());
-                    file.setPath(object[QStringLiteral("path")].toString());
-                    file.setSize(object[QStringLiteral("size")].toInt());
-                    files.append(file);
-                }
-            }
+        auto responseArray = jsonDoc.array();
+        for (auto item = responseArray.constBegin(); item < responseArray.constEnd(); ++item) {
+            auto file = new File();
+            auto obj = item->toObject();
+            file->setPath(obj["path"].toString());
+            file->setSize(obj["size"].toInt());
+            file->setName(obj["name"].toString());
+            file->setModifiedDate(QDateTime::fromString(obj["modified_date"].toString(), Qt::DateFormat::ISODate));
+            files->append(*file);
         }
 
-        emit filesReceived(files);
+        emit listFilesFinished(*files);
+    });
+}
+
+void NextcloudClient::parseError(QNetworkReply *reply, const function<void()> &action) {
+    if (reply->error() != QNetworkReply::NetworkError::NoError) {
+        auto data = reply->readAll();
+        auto jsonDoc = QJsonDocument::fromJson(data);
+
+        if (jsonDoc.isObject()) {
+            emit httpError(jsonDoc.object()["error"].toString());
+        } else {
+            emit httpError(data);
+        }
+    } else {
+        action();
     }
+}
+
+QNetworkRequest NextcloudClient::getRequest() {
+    auto request = QNetworkRequest();
+    request.setUrl(QStringLiteral("http://%1:%2/nextcloud")
+                           .arg(AppSettings::serverHost())
+                           .arg(AppSettings::serverPort()));
+
+    return request;
 }

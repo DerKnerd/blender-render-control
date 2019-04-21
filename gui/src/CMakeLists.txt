@@ -5,11 +5,10 @@ set(blender_render_control_center_SRCS
         MainView.h
         nextcloud/NextcloudClient.cpp
         nextcloud/NextcloudClient.h
-        types/File.cpp
         types/File.h
         blender/BlenderClient.cpp
         blender/BlenderClient.h
-        )
+        logging/LogClient.cpp logging/LogClient.h queue/QueueClient.cpp queue/QueueClient.h types/QueueEntry.h)
 
 ecm_qt_declare_logging_category(blender_render_control_center_SRCS
         HEADER guidebug.h

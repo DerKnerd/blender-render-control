@@ -3,25 +3,27 @@
 
 #include <nextcloud/NextcloudClient.h>
 #include <blender/BlenderClient.h>
+#include <logging/LogClient.h>
+#include <queue/QueueClient.h>
 #include <utility>
 
 // KF headers
-#include <KXmlGuiWindow>
-#include <KActionCollection>
-#include <KConfigDialog>
-#include <KToolBar>
+#include <KXmlGui/KXmlGuiWindow>
+#include <KXmlGui/KActionCollection>
+#include <KXmlGui/KToolBar>
+
+#include <KConfigWidgets/KConfigDialog>
 
 // Qt headers
-#include <QStatusBar>
+#include <QtWidgets/QStatusBar>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QSystemTrayIcon>
-#include <QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMenu>
 
 #include <ui_settings.h>
 #include <AppSettings.h>
 #include "MainView.h"
-
-class guiView;
 
 /**
  * This class serves as the main window for gui.  It handles the
@@ -39,11 +41,6 @@ public:
      */
     MainWindow();
 
-    /**
-     * Default Destructor
-     */
-    ~MainWindow() override;
-
 private slots:
 
     void connectToServer();
@@ -58,44 +55,64 @@ private slots:
 
     void stopRendering();
 
-    void quitApplication();
+    void startRenderFinished();
+
+    void stopRenderFinished();
+
+    void pauseRenderFinished();
+
+    void queueAddFinished();
+
+    void queueRemoveFinished();
+
+    void queueGetFinished(QList<QueueEntry> entries);
+
+    void listFiles();
+
+    void syncFiles();
+
+    void listFilesFinished(QList<File> files);
+
+    void httpError(QString message);
 
 public slots:
 
-    void writeNextcloudLog(const QString &message);
+    void quitApplication();
 
-    void writeBlenderLog(const QString &message, const QString &file);
-
-    void blenderConnected();
-
-    void blenderQueueListed(const QList<QString> &files);
-
-    void nextcloudConnected();
+    void writeLog(const QString &message, const QString &file);
 
 private:
     // this is the name of the root widget inside our Ui file
     // you can rename it in designer and then change it here
     Ui::Settings m_settings;
     MainView *m_mainView;
+
     NextcloudClient *nextcloudClient;
     BlenderClient *blenderClient;
+    LogClient *logClient;
+    QueueClient *queueClient;
+
     QLabel *statusbarFilename;
     QLabel *statusbarMessage;
-    QProgressBar *statusbarProgress;
-    QString *currentFilename;
 
-    void handleSettingsChanged();
+    QProgressBar *statusbarProgress;
+
+    QString *currentFilename;
 
     QAction *nextcloudSyncAction;
     QAction *nextcloudListAction;
     QAction *blenderStartRenderAction;
     QAction *blenderPauseRenderAction;
     QAction *blenderStopRenderAction;
-    QAction *blenderAddToQueueAction;
-    QAction *blenderRemoveFromQueueAction;
+    QAction *queueAddAction;
+    QAction *queueRemoveAction;
+
     QSystemTrayIcon *trayIcon;
 
     void removeFromRenderQueue();
+
+    void handleSettingsChanged();
+
 };
 
 #endif // GUIWINDOW_H

@@ -5,11 +5,17 @@
 #ifndef GUI_BLENDERCLIENT_H
 #define GUI_BLENDERCLIENT_H
 
+#include <QtCore/QObject>
+#include <QtCore/QUrlQuery>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 
-#include <QtCore/QArgument>
-#include <QtWebSockets/QWebSocket>
-#include <QNetworkReply>
-#include <types/File.h>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+
+#include <AppSettings.h>
+
+using namespace std;
 
 class BlenderClient : public QObject {
 Q_OBJECT
@@ -24,32 +30,28 @@ public slots:
 
     void pauseRender();
 
-    void openSocket(const QString &url);
-
-    void closeSocket();
-
-    void addToQueue(const QStringList &files);
-
-    void removeFromQueue(const QStringList &files);
-
-    void getQueue();
-
 private:
-    void onConnected();
+    void onStartRenderFinished(QNetworkReply *reply);
 
-    void onTextMessageReceived(const QString &message);
+    void onStopRenderFinished(QNetworkReply *reply);
 
-    void onFinished(QNetworkReply *reply);
+    void onPauseRenderFinished(QNetworkReply *reply);
 
-    QWebSocket socketClient;
+    void parseError(QNetworkReply *reply, const function<void()> &action);
+
+    QNetworkRequest getRequest();
+
+    QNetworkAccessManager *accessManager;
 
 signals:
 
-    void connected();
+    void startRenderFinished();
 
-    void queueListed(const QList<QString> &files);
+    void stopRenderFinished();
 
-    void logReceived(const QString &message, const QString &file);
+    void pauseRenderFinished();
+
+    void httpError(QString message);
 };
 
 

@@ -4,16 +4,10 @@
 
 #include "MainView.h"
 
-using namespace Qt;
-
 MainView::MainView(QWidget *parent) : QWidget(parent) {
     m_ui.setupUi(this);
 
     m_ui.availableFiles->resizeColumnsToContents();
-}
-
-MainView::~MainView() {
-
 }
 
 void MainView::onLogReceived(const QString &qString) {
@@ -24,43 +18,47 @@ void MainView::onLogReceived(const QString &qString) {
 void MainView::onFilesReceived(QList<File> &data) {
     m_ui.availableFiles->setRowCount(data.size());
 
-    std::sort(data.rbegin(), data.rend());
+    sort(data.rbegin(), data.rend());
 
-    for (int i = 0; i < data.size(); ++i) {
-        const auto &file = data.at(i);
-
+    for (auto file = data.constBegin(); file < data.constEnd(); ++file) {
+        auto i = data.indexOf(*file);
         auto nameElement = new QTableWidgetItem();
-        nameElement->setText(file.getName());
-        nameElement->setCheckState(CheckState::Unchecked);
+        nameElement->setText(file->getName());
+        nameElement->setCheckState(Qt::CheckState::Unchecked);
         m_ui.availableFiles->setItem(i, 0, nameElement);
 
         auto modifiedDateElement = new QTableWidgetItem();
-        auto date = file.getModifiedDate().toLocalTime().toString(DateFormat::SystemLocaleShortDate);
+        auto date = file->getModifiedDate().toLocalTime().toString(Qt::DateFormat::SystemLocaleShortDate);
         modifiedDateElement->setText(date);
         m_ui.availableFiles->setItem(i, 1, modifiedDateElement);
 
         auto sizeElement = new QTableWidgetItem();
-        sizeElement->setText(QStringLiteral("%1 MiB").arg(file.getSize() / 1024.0 / 1024.0));
+        sizeElement->setText(QStringLiteral("%1 MiB").arg(file->getSize() / 1024.0 / 1024.0));
         m_ui.availableFiles->setItem(i, 2, sizeElement);
 
         auto pathElement = new QTableWidgetItem();
-        pathElement->setText(file.getPath());
+        pathElement->setText(file->getPath());
         m_ui.availableFiles->setItem(i, 3, pathElement);
     }
 
     m_ui.availableFiles->resizeColumnsToContents();
 }
 
-QStringList MainView::getFiles() const {
-    auto items = m_ui.availableFiles->findItems(QStringLiteral(""), MatchContains);
-    auto selectedFiles = QStringList();
+QList<QueueEntry> MainView::getFiles() const {
+    auto items = m_ui.availableFiles->findItems(QStringLiteral(""), Qt::MatchContains);
+    auto selectedFiles = QList<QueueEntry>();
 
     for (int i = 0; i < items.count(); ++i) {
         auto item = items[i];
-        if (item->checkState() == CheckState::Checked) {
+        if (item->checkState() == Qt::CheckState::Checked) {
             auto row = item->row();
             auto path = m_ui.availableFiles->item(row, 3);
-            selectedFiles.append(path->text());
+            auto entry = QueueEntry();
+            entry.setPath(path->text());
+            entry.setWidth(7860);
+            entry.setHeight(4320);
+
+            selectedFiles.append(entry);
         }
     }
 
@@ -68,12 +66,12 @@ QStringList MainView::getFiles() const {
 }
 
 void MainView::uncheckAllFiles() {
-    auto items = m_ui.availableFiles->findItems(QStringLiteral(""), MatchContains);
+    auto items = m_ui.availableFiles->findItems(QStringLiteral(""), Qt::MatchContains);
 
     for (int i = 0; i < items.count(); ++i) {
         auto item = items[i];
-        if (item->checkState() == CheckState::Checked) {
-            item->setCheckState(CheckState::Unchecked);
+        if (item->checkState() == Qt::CheckState::Checked) {
+            item->setCheckState(Qt::CheckState::Unchecked);
         }
     }
 }

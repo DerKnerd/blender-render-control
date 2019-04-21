@@ -6,13 +6,16 @@ Copyright (C) 2019 by Imanuel Ulbricht <imanuel.ulbricht@outlook.com>
 #include "MainWindow.h"
 
 // KF headers
-#include <KCrash>
-#include <KLocalizedString>
-#include <KAboutData>
+#include <KCrash/KCrash>
+
+#include <KI18n/KLocalizedString>
+
+#include <KCoreAddons/KAboutData>
 
 // Qt headers
-#include <QApplication>
 #include <QtCore/QCommandLineParser>
+
+#include <QtWidgets/QApplication>
 
 int main(int argc, char **argv) {
     QApplication application(argc, argv);
@@ -32,9 +35,9 @@ int main(int argc, char **argv) {
     aboutData.setDesktopFileName(QStringLiteral("codes.ulbricht.imanuel.blender-render-control"));
 
     KAboutData::setApplicationData(aboutData);
-    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("codes.ulbricht.imanuel.blender-render-control")));
-    application.setApplicationDisplayName(i18n("Blender Render Control Center"));
-    application.setApplicationName(i18n("Blender Render Control Center"));
+    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("blender")));
+    QApplication::setApplicationDisplayName(i18n("Blender Render Control Center"));
+    QApplication::setApplicationName(i18n("Blender Render Control Center"));
 
     QCommandLineParser parser;
     aboutData.setupCommandLine(&parser);
@@ -44,6 +47,8 @@ int main(int argc, char **argv) {
 
     auto *window = new MainWindow();
     window->show();
+
+    QObject::connect(&application, &QApplication::aboutToQuit, window, &MainWindow::quitApplication);
 
     return QApplication::exec();
 }

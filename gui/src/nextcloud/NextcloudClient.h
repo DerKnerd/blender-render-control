@@ -5,15 +5,18 @@
 #ifndef GUI_NEXTCLOUDCLIENT_H
 #define GUI_NEXTCLOUDCLIENT_H
 
-#include <QtCore/QString>
 #include <QtCore/QObject>
-#include <QtWebSockets/QWebSocket>
-#include <QtXml/QtXml>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
-#include <types/File.h>
-#include <iostream>
+
 #include <AppSettings.h>
+#include <types/File.h>
+
+using namespace std;
 
 class NextcloudClient : public QObject {
 Q_OBJECT
@@ -22,32 +25,28 @@ public:
 
 public slots:
 
-    void startFileSync();
+    void startSync();
 
-    void openSocket(const QString &url);
-
-    void closeSocket();
-
-    void listBlendFiles();
+    void listFiles();
 
 private:
-    void onConnected();
+    void onStartSyncFinished(QNetworkReply *reply);
 
-    void onTextMessageReceived(const QString &message);
+    void onListFilesFinished(QNetworkReply *reply);
 
-    void onBinaryMessageReceived(const QByteArray &data);
+    void parseError(QNetworkReply *reply, const function<void()> &action);
 
-    void onFinished(QNetworkReply *reply);
+    QNetworkRequest getRequest();
 
-    QWebSocket socketClient;
+    QNetworkAccessManager *accessManager;
 
 signals:
 
-    void connected();
+    void startSyncFinished();
 
-    void logReceived(const QString &message);
+    void listFilesFinished(QList<File> &files);
 
-    void filesReceived(QList<File> &files);
+    void httpError(QString message);
 };
 
 
