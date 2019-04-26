@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.support.design.widget.TextInputEditText
 import android.support.v7.app.AppCompatActivity
 import android.text.InputType
+import android.view.MenuItem
 import android.view.View
 import com.github.kittinunf.fuel.core.FuelManager
 import org.jetbrains.anko.*
@@ -19,6 +20,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SettingsView().setContentView(this)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 }
 
@@ -37,12 +39,13 @@ class SettingsView : AnkoComponent<SettingsActivity> {
                 toolbar {
                     id = R.id.toolbar
                     popupTheme = R.style.AppTheme_PopupOverlay
-                    titleResource = R.string.app_name
+                    titleResource = R.string.settings
                     setTitleTextColor(Color.WHITE)
 
                     menu.apply {
                         add(R.string.settings_apply).apply {
                             tooltipText = owner.getString(R.string.settings_apply)
+                            setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                             setIcon(R.drawable.ic_check)
                             setOnMenuItemClickListener {
                                 val preferencesEditor = preferences.edit()

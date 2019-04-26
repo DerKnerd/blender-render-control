@@ -19,4 +19,11 @@
     <string name="settings_server_host">Server Host</string>
     <string name="settings_server_port">Server Port</string>
     <string name="blender_add_to_render_queue">Add to Render Queue</string>
+    <string name="nav_header_blender_render_control">Blender Render Control App</string>
+    <string name="toast_queue_added_successfully">Successfully added the files to the queue</string>
+    <string name="toast_error_adding_to_queue">Couldn\'t add the files to the queue</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="settings">Settings</string>
 </resources>
