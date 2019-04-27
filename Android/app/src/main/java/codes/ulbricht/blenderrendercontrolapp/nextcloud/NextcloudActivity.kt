@@ -1,4 +1,4 @@
-package codes.ulbricht.blenderrendercontrolapp.blender
+package codes.ulbricht.blenderrendercontrolapp.nextcloud
 
 import android.app.Activity
 import android.os.Bundle
@@ -17,20 +17,19 @@ import com.github.kittinunf.fuel.httpPost
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedAppBarLayout
-import org.json.JSONArray
 import org.json.JSONObject
 
-class BlenderAddToRenderQueueActivity : Activity() {
-    private val blenderAddToRenderQueueView = BlenderAddToRenderQueueView()
+class NextcloudActivity : Activity() {
+    private val nextcloudView = NextcloudView()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        blenderAddToRenderQueueView.setContentView(this)
+        nextcloudView.setContentView(this)
 
-        setActionBar(blenderAddToRenderQueueView.toolbar)
+        setActionBar(nextcloudView.toolbar)
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
-        blenderAddToRenderQueueView.loadData()
+        nextcloudView.loadData()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -43,28 +42,17 @@ class BlenderAddToRenderQueueActivity : Activity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menu?.apply {
-            add(R.string.blender_add_to_render_queue).apply {
-                tooltipText = getString(R.string.blender_add_to_render_queue)
+            add(R.string.nextcloud_sync_files).apply {
+                tooltipText = getString(R.string.nextcloud_sync_files)
 
                 setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-                setIcon(R.drawable.ic_check)
+                setIcon(android.R.drawable.ic_popup_sync)
                 setOnMenuItemClickListener {
-                    val selectedFiles = blenderAddToRenderQueueView.filesAdapter.selectedFiles
-                    val filesToTransfer = selectedFiles.map {
-                        val obj = JSONObject()
-                        obj.put("path", it.path)
-                        obj.put("width", 7860)
-                        obj.put("height", 4320)
-
-                        obj
-                    }
-
-                    "/queue"
+                    "/nextcloud"
                         .httpPost()
-                        .body(JSONArray(filesToTransfer.toTypedArray()).toString())
-                        .responseJson { _, response, result ->
+                        .responseJson { request, response, result ->
                             if (response.isSuccessful && response.statusCode == 204) {
-                                toast(R.string.toast_queue_added_successfully)
+                                toast(R.string.toast_sync_started_successfully)
                             } else {
                                 val error = if (result.component2() != null) {
                                     result.component2().toString()
@@ -85,13 +73,13 @@ class BlenderAddToRenderQueueActivity : Activity() {
     }
 }
 
-class BlenderAddToRenderQueueView : AnkoComponent<BlenderAddToRenderQueueActivity> {
-    val filesAdapter = BlenderAddToRenderQueueAdapter()
+class NextcloudView : AnkoComponent<NextcloudActivity> {
+    private val filesAdapter = NextcloudAdapter()
     lateinit var toolbar: Toolbar
 
     private lateinit var list: CoordinatorLayout
     private lateinit var spinner: RelativeLayout
-    private lateinit var context: AnkoContext<BlenderAddToRenderQueueActivity>
+    private lateinit var context: AnkoContext<NextcloudActivity>
 
     fun loadData() {
         list.visibility = View.GONE
@@ -125,15 +113,16 @@ class BlenderAddToRenderQueueView : AnkoComponent<BlenderAddToRenderQueueActivit
             }
     }
 
-    override fun createView(ui: AnkoContext<BlenderAddToRenderQueueActivity>): View = with(ui) {
+    override fun createView(ui: AnkoContext<NextcloudActivity>): View = with(ui) {
+        context = ui
+
         verticalLayout {
             fitsSystemWindows = true
 
             themedAppBarLayout(R.style.ThemeOverlay_AppCompat_Dark_ActionBar) {
                 toolbar = toolbar {
-                    id = R.id.toolbar
                     popupTheme = R.style.AppTheme_PopupOverlay
-                    titleResource = R.string.add_to_render_queue
+                    titleResource = R.string.nextcloud
                 }.lparams(width = matchParent, height = wrapContent)
             }.lparams(width = matchParent, height = wrapContent)
 

@@ -31,7 +31,12 @@
         <activity
                 android:name=".blender.BlenderAddToRenderQueueActivity"
                 android:parentActivityName=".blender.BlenderActivity"
-                android:label="@string/blender">
+                android:label="@string/add_to_render_queue">
+        </activity>
+        <activity
+                android:name=".nextcloud.NextcloudActivity"
+                android:parentActivityName=".MainActivity"
+                android:label="@string/nextcloud">
         </activity>
     </application>
 </manifest>

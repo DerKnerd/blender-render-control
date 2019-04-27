@@ -14,6 +14,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout.VERTICAL
 import codes.ulbricht.blenderrendercontrolapp.blender.BlenderActivity
+import codes.ulbricht.blenderrendercontrolapp.nextcloud.NextcloudActivity
 import com.github.kittinunf.fuel.core.FuelManager
 import org.jetbrains.anko.*
 import org.jetbrains.anko.appcompat.v7.titleResource
@@ -23,7 +24,6 @@ import org.jetbrains.anko.design.navigationView
 import org.jetbrains.anko.support.v4.drawerLayout
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private lateinit var drawer: DrawerLayout
     private val mainView = MainView()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mainView.setContentView(this)
 
         prepareNavigationDrawer()
-        drawer.openDrawer(GravityCompat.START)
+        mainView.drawer.openDrawer(GravityCompat.START)
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
@@ -39,8 +39,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         when (menuItem.title) {
             getString(R.string.nav_blender_render_queue) -> startActivity<BlenderActivity>()
+            getString(R.string.nav_nextcloud_files) -> startActivity<NextcloudActivity>()
             getString(R.string.nav_other_settings) -> startActivity(intentFor<SettingsActivity>())
-            else -> drawer.openDrawer(GravityCompat.START)
+            else -> mainView.drawer.openDrawer(GravityCompat.START)
         }
 
         FuelManager.instance.apply {
@@ -57,19 +58,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun prepareNavigationDrawer() {
-        val toolbar = find<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(mainView.toolbar)
 
-        drawer = find(R.id.drawer_layout)
         val toggle = ActionBarDrawerToggle(
             this,
-            drawer,
-            toolbar,
+            mainView.drawer,
+            mainView.toolbar,
             R.string.navigation_drawer_open,
             R.string.navigation_drawer_close
         )
 
-        drawer.addDrawerListener(toggle)
+        mainView.drawer.addDrawerListener(toggle)
         toggle.syncState()
 
         val navigationView = find<NavigationView>(R.id.nav_view)
@@ -78,15 +77,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 }
 
 class MainView : AnkoComponent<MainActivity> {
+    lateinit var drawer: DrawerLayout
+    lateinit var toolbar: Toolbar
+
     override fun createView(ui: AnkoContext<MainActivity>): View = with(ui) {
-        drawerLayout {
+        drawer = drawerLayout {
             fitsSystemWindows = true
             id = R.id.drawer_layout
             lparams(width = matchParent, height = matchParent)
 
             verticalLayout {
                 appBarLayout {
-                    toolbar {
+                    toolbar = toolbar {
                         id = R.id.toolbar
                         popupTheme = R.style.AppTheme_PopupOverlay
                         titleResource = R.string.app_name
@@ -119,6 +121,7 @@ class MainView : AnkoComponent<MainActivity> {
                 }
             }.lparams(width = wrapContent, height = matchParent, gravity = GravityCompat.START)
         }
+        drawer
     }
 }
 
