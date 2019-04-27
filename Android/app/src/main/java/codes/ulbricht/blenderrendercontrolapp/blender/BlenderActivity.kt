@@ -1,6 +1,7 @@
 package codes.ulbricht.blenderrendercontrolapp.blender
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.support.design.widget.CoordinatorLayout
 import android.view.Menu
@@ -10,11 +11,15 @@ import android.widget.RelativeLayout
 import android.widget.Toolbar
 import codes.ulbricht.blenderrendercontrolapp.R
 import codes.ulbricht.blenderrendercontrolapp.model.QueueEntry
+import codes.ulbricht.blenderrendercontrolapp.socket.LogSocketListener
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.core.isSuccessful
 import com.github.kittinunf.fuel.httpDelete
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPut
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.coordinatorLayout
 import org.jetbrains.anko.design.themedAppBarLayout
@@ -26,6 +31,7 @@ class BlenderActivity : Activity() {
     private lateinit var startQueue: MenuItem
     private lateinit var pauseQueue: MenuItem
     private lateinit var stopQueue: MenuItem
+    private lateinit var logSocket: WebSocket
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +39,34 @@ class BlenderActivity : Activity() {
 
         setActionBar(blenderView.toolbar)
         actionBar?.setDisplayHomeAsUpEnabled(true)
+        startSocket()
+    }
+
+    override fun onNavigateUp(): Boolean {
+        logSocket.close(1000, "")
+        return super.onNavigateUp()
+    }
+
+    private fun startSocket() {
+        val preferences = getSharedPreferences(getString(R.string.preferences_file_key), Context.MODE_PRIVATE)
+
+        val basePath = "ws://${preferences.getString(
+            getString(R.string.preferences_server_host),
+            "localhost"
+        )}:${preferences.getString(
+            getString(R.string.preferences_server_port),
+            "1337"
+        )}/log"
+
+        val logSocketListener = LogSocketListener {
+            val data = JSONObject(it)
+            if (data.getString("message") == "blender quit") {
+                loadState()
+            }
+        }
+        val client = OkHttpClient()
+        val request = Request.Builder().url(basePath).build()
+        logSocket = client.newWebSocket(request, logSocketListener)
     }
 
     private fun loadState() {

@@ -8,7 +8,6 @@
             android:icon="@mipmap/ic_launcher"
             android:theme="@style/AppTheme.NoActionBar"
             android:usesCleartextTraffic="true"
-
             tools:ignore="GoogleAppIndexingWarning">
         <activity
                 android:name=".MainActivity"
