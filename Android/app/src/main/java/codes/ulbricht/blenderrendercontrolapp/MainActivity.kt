@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         prepareNavigationDrawer()
         mainView.drawer.openDrawer(GravityCompat.START)
+        startService(intentFor<BlenderRenderProgressService>())
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
