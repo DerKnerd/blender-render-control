@@ -1,32 +1,88 @@
 package codes.ulbricht.blenderrendercontrolapp
 
+import android.app.Activity
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.support.design.widget.TextInputEditText
-import android.support.v7.app.AppCompatActivity
 import android.text.InputType
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toolbar
 import com.github.kittinunf.fuel.core.FuelManager
 import org.jetbrains.anko.*
-import org.jetbrains.anko.appcompat.v7.titleResource
-import org.jetbrains.anko.appcompat.v7.toolbar
-import org.jetbrains.anko.design.appBarLayout
 import org.jetbrains.anko.design.textInputEditText
 import org.jetbrains.anko.design.textInputLayout
+import org.jetbrains.anko.design.themedAppBarLayout
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : Activity() {
+    private val settingsView = SettingsView()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        SettingsView().setContentView(this)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        settingsView.setContentView(this)
+
+        setActionBar(settingsView.toolbar)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> onBackPressed()
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val preferences = getSharedPreferences(getString(R.string.preferences_file_key), Context.MODE_PRIVATE)
+        menu?.apply {
+            add(R.string.settings_apply).apply {
+                tooltipText = getString(R.string.settings_apply)
+                setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                setIcon(R.drawable.ic_check)
+                setOnMenuItemClickListener {
+                    val preferencesEditor = preferences.edit()
+
+                    if (settingsView.serverHost != null) {
+                        preferencesEditor.putString(
+                            getString(R.string.preferences_server_host),
+                            settingsView.serverHost?.text.toString()
+                        )
+                    }
+
+                    if (settingsView.serverPort != null) {
+                        preferencesEditor.putString(
+                            getString(R.string.preferences_server_port),
+                            settingsView.serverPort?.text.toString()
+                        )
+                    }
+
+                    preferencesEditor.apply()
+
+                    FuelManager.instance.apply {
+                        basePath = "http://${preferences.getString(
+                            getString(R.string.preferences_server_host),
+                            "localhost"
+                        )}:${preferences.getString(
+                            getString(R.string.preferences_server_port),
+                            "1337"
+                        )}"
+                    }
+
+                    onBackPressed()
+                    true
+                }
+            }
+        }
+
+        return true
     }
 }
 
 class SettingsView : AnkoComponent<SettingsActivity> {
-    private var serverHost: TextInputEditText? = null
-    private var serverPort: TextInputEditText? = null
+    var serverHost: TextInputEditText? = null
+    var serverPort: TextInputEditText? = null
+    lateinit var toolbar: Toolbar
 
     override fun createView(ui: AnkoContext<SettingsActivity>): View = with(ui) {
         val preferences =
@@ -35,52 +91,12 @@ class SettingsView : AnkoComponent<SettingsActivity> {
         verticalLayout {
             lparams(width = matchParent, height = matchParent)
 
-            appBarLayout {
-                toolbar {
-                    id = R.id.toolbar
+            themedAppBarLayout(R.style.ThemeOverlay_AppCompat_Dark_ActionBar) {
+                toolbar = themedToolbar(R.style.Theme_AppCompat) {
+                    lparams(width = matchParent)
                     popupTheme = R.style.AppTheme_PopupOverlay
                     titleResource = R.string.settings
-                    setTitleTextColor(Color.WHITE)
-
-                    menu.apply {
-                        add(R.string.settings_apply).apply {
-                            tooltipText = owner.getString(R.string.settings_apply)
-                            setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-                            setIcon(R.drawable.ic_check)
-                            setOnMenuItemClickListener {
-                                val preferencesEditor = preferences.edit()
-
-                                if (serverHost != null) {
-                                    preferencesEditor.putString(
-                                        owner.getString(R.string.preferences_server_host),
-                                        serverHost?.text.toString()
-                                    )
-                                }
-
-                                if (serverPort != null) {
-                                    preferencesEditor.putString(
-                                        owner.getString(R.string.preferences_server_port),
-                                        serverPort?.text.toString()
-                                    )
-                                }
-
-                                preferencesEditor.apply()
-
-                                FuelManager.instance.apply {
-                                    basePath = "http://${preferences.getString(
-                                        owner.getString(R.string.preferences_server_host),
-                                        "localhost"
-                                    )}:${preferences.getString(
-                                        owner.getString(R.string.preferences_server_port),
-                                        "1337"
-                                    )}"
-                                }
-
-                                owner.navigateUpTo(intentFor<MainActivity>())
-                            }
-                        }
-                    }
-                }.lparams(width = matchParent)
+                }
             }.lparams(width = matchParent, height = wrapContent)
 
             verticalLayout {

@@ -26,4 +26,14 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="settings">Settings</string>
+    <string name="nav_blender_render_queue">Render Queue</string>
+    <string name="nav_nextcloud_files">Files</string>
+    <string name="blender">Blender</string>
+    <string name="blender_start_queue">Start queue</string>
+    <string name="toast_queue_started_successfully">Queue was started successfully</string>
+    <string name="toast_error_starting_to_queue">Couldn\'t start the render queue</string>
+    <string name="blender_pause_queue">Pause Queue</string>
+    <string name="blender_stop_queue">Stop Queue</string>
+    <string name="toast_queue_stopped_successfully">Queue was stopped successfully</string>
+    <string name="toast_queue_paused_successfully">Queue was paused successfully</string>
 </resources>

@@ -3,15 +3,14 @@ package codes.ulbricht.blenderrendercontrolapp.blender
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import codes.ulbricht.blenderrendercontrolapp.model.File
+import codes.ulbricht.blenderrendercontrolapp.model.QueueEntry
 import org.jetbrains.anko.*
-import org.jetbrains.anko.sdk27.coroutines.onCheckedChange
+import java.io.File
 
-class BlenderAddToRenderQueueAdapter : BaseAdapter() {
-    private var items: List<File> = ArrayList()
-    val selectedFiles = ArrayList<File>()
+class BlenderAdapter : BaseAdapter() {
+    private var items: List<QueueEntry> = ArrayList()
 
-    fun setFiles(items: List<File>) {
+    fun setEntries(items: List<QueueEntry>) {
         this.items = items
 
         notifyDataSetChanged()
@@ -23,21 +22,15 @@ class BlenderAddToRenderQueueAdapter : BaseAdapter() {
         return with(parent!!.context) {
             frameLayout {
                 lparams(width = matchParent, height = wrapContent)
-                checkBox(item.name) {
+                val file = File(item.path)
+                textView("${file.nameWithoutExtension} (${item.width} x ${item.height})") {
                     padding = dip(16)
-                    onCheckedChange { _, isChecked ->
-                        if (isChecked) {
-                            selectedFiles.add(item)
-                        } else {
-                            selectedFiles.remove(item)
-                        }
-                    }
                 }
             }
         }
     }
 
-    override fun getItem(position: Int): File {
+    override fun getItem(position: Int): QueueEntry {
         return items[position]
     }
 
