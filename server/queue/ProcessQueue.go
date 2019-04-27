@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 )
 
 var (
@@ -66,8 +67,8 @@ func (processQueue *ProcessQueue) ProcessNext() {
 		"-P",
 		path.Join(workingDir, "render_all_cameras.py"),
 		"--",
-		string(queueEntry.Width),
-		string(queueEntry.Height),
+		strconv.Itoa(queueEntry.Width),
+		strconv.Itoa(queueEntry.Height),
 	)
 
 	stdoutReader, err := processQueue.blenderCommand.StdoutPipe()
