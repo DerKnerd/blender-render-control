@@ -60,7 +60,7 @@ class BlenderActivity : Activity() {
 
         val logSocketListener = LogSocketListener {
             val data = JSONObject(it)
-            if (data.getString("message") == "blender quit") {
+            if (data.getString("message").toLowerCase() == "blender quit") {
                 loadState()
             }
         }

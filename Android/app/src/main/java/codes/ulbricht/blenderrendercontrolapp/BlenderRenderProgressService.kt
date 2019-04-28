@@ -9,12 +9,13 @@ import codes.ulbricht.blenderrendercontrolapp.socket.LogSocketListener
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
+import org.jetbrains.anko.AnkoLogger
+import org.jetbrains.anko.error
 import org.jetbrains.anko.intentFor
 import org.json.JSONObject
 import java.io.File
 
-class BlenderRenderProgressService : Service() {
-    private val CHANNEL_ID = "blender_render_control_app_status"
+class BlenderRenderProgressService : Service(), AnkoLogger {
     private lateinit var notificationManager: NotificationManager
     private var notificationId = 0
 
@@ -35,7 +36,7 @@ class BlenderRenderProgressService : Service() {
         return null
     }
 
-    lateinit var logSocket: WebSocket
+    private lateinit var logSocket: WebSocket
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val preferences = getSharedPreferences(getString(R.string.preferences_file_key), Context.MODE_PRIVATE)
@@ -50,25 +51,34 @@ class BlenderRenderProgressService : Service() {
 
         val logSocketListener = LogSocketListener {
             val data = JSONObject(it)
-            if (data.getString("message") == "blender quit") {
-                val file = data.getString("file")
-                val filenameWithoutExtension = File(file).nameWithoutExtension
-                val notification = Notification
-                    .Builder(applicationContext, "test")
-                    .setContentTitle(getString(R.string.blender_render_progress_service_title))
-                    .setContentText(
-                        getString(R.string.blender_render_progress_service_text).format(
-                            filenameWithoutExtension
-                        )
-                    )
-                    .setContentIntent(
-                        PendingIntent.getActivity(applicationContext, 0, intentFor<BlenderActivity>(), 0)
-                    )
-                    .build()
+            if (data.getString("message").toLowerCase() == "blender quit") {
+                try {
+                    if (data.has("file")) {
+                        val file = data.getString("file")
+                        val filenameWithoutExtension = File(file).nameWithoutExtension
+                        val notification = Notification
+                            .Builder(applicationContext, CHANNEL_ID)
+                            .setContentTitle(getString(R.string.blender_render_progress_service_title))
+                            .setContentText(
+                                getString(R.string.blender_render_progress_service_text).format(
+                                    filenameWithoutExtension
+                                )
+                            )
+                            .setColorized(true)
+                            .setColor(getColor(R.color.colorBlender))
+                            .setSmallIcon(R.drawable.ic_small_icon)
+                            .setContentIntent(
+                                PendingIntent.getActivity(applicationContext, 0, intentFor<BlenderActivity>(), 0)
+                            )
+                            .build()
 
-                notificationManager.notify(
-                    ++notificationId, notification
-                )
+                        notificationManager.notify(
+                            ++notificationId, notification
+                        )
+                    }
+                } catch (e: Exception) {
+                    error(e.localizedMessage, e)
+                }
             }
         }
         val client = OkHttpClient()
@@ -76,5 +86,9 @@ class BlenderRenderProgressService : Service() {
         logSocket = client.newWebSocket(request, logSocketListener)
 
         return START_STICKY
+    }
+
+    companion object {
+        const val CHANNEL_ID = "blender_render_control_app_status"
     }
 }
