@@ -50,25 +50,34 @@ class BlenderRenderProgressService : Service() {
 
         val logSocketListener = LogSocketListener {
             val data = JSONObject(it)
-            if (data.getString("message") == "blender quit") {
-                val file = data.getString("file")
-                val filenameWithoutExtension = File(file).nameWithoutExtension
-                val notification = Notification
-                    .Builder(applicationContext, "test")
-                    .setContentTitle(getString(R.string.blender_render_progress_service_title))
-                    .setContentText(
-                        getString(R.string.blender_render_progress_service_text).format(
-                            filenameWithoutExtension
-                        )
-                    )
-                    .setContentIntent(
-                        PendingIntent.getActivity(applicationContext, 0, intentFor<BlenderActivity>(), 0)
-                    )
-                    .build()
+            if (data.getString("message").toLowerCase() == "blender quit") {
+                try {
+                    if (data.has("file")) {
+                        val file = data.getString("file")
+                        val filenameWithoutExtension = File(file).nameWithoutExtension
+                        val notification = Notification
+                            .Builder(applicationContext, CHANNEL_ID)
+                            .setContentTitle(getString(R.string.blender_render_progress_service_title))
+                            .setContentText(
+                                getString(R.string.blender_render_progress_service_text).format(
+                                    filenameWithoutExtension
+                                )
+                            )
+                            .setColorized(true)
+                            .setColor(getColor(R.color.colorBlender))
+                            .setSmallIcon(R.drawable.ic_small_icon)
+                            .setContentIntent(
+                                PendingIntent.getActivity(applicationContext, 0, intentFor<BlenderActivity>(), 0)
+                            )
+                            .build()
 
-                notificationManager.notify(
-                    ++notificationId, notification
-                )
+                        notificationManager.notify(
+                            ++notificationId, notification
+                        )
+                    }
+                } catch (e: Exception) {
+                    error(e.localizedMessage)
+                }
             }
         }
         val client = OkHttpClient()
